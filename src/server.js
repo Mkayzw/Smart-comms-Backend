@@ -29,7 +29,16 @@ const server = http.createServer(app);
 // Initialize Socket.io
 const io = new Server(server, {
   cors: {
-    origin: 'http://localhost:5173', // Allow frontend origin
+    // Allow origins defined in environment variable FRONTEND_URL (comma separated)
+    // e.g. FRONTEND_URL="https://my-frontend.vercel.app,https://staging.example.com"
+    origin: (origin, callback) => {
+      const raw = process.env.FRONTEND_URL || 'http://localhost:5173';
+      const allowed = raw.split(',').map((s) => s.trim());
+      // allow requests with no origin (like curl/postman or server-to-server)
+      if (!origin) return callback(null, true);
+      if (allowed.includes(origin)) return callback(null, true);
+      return callback(new Error('CORS policy: Origin not allowed'));
+    },
     credentials: true
   }
 });
@@ -39,8 +48,16 @@ const socketAPI = socketHandler(io);
 global.socketAPI = socketAPI;
 
 // Middleware
+// Configure CORS to allow origins specified in FRONTEND_URL env var
 app.use(cors({
-  origin: 'http://localhost:5173', // Allow frontend origin
+  origin: (origin, callback) => {
+    const raw = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const allowed = raw.split(',').map((s) => s.trim());
+    // allow requests with no origin (curl, server-to-server)
+    if (!origin) return callback(null, true);
+    if (allowed.includes(origin)) return callback(null, true);
+    return callback(new Error('CORS policy: Origin not allowed'));
+  },
   credentials: true // Allow credentials (cookies, authorization headers, etc.)
 }));
 app.use(express.json());
