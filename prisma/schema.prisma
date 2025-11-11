@@ -1,0 +1,176 @@
+ 
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  STUDENT
+  LECTURER
+  ADMIN
+}
+
+enum TargetAudience {
+  ALL
+  STUDENTS
+  LECTURERS
+}
+
+enum VenueStatus {
+  AVAILABLE
+  OCCUPIED
+  MAINTENANCE
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  password      String
+  firstName     String
+  lastName      String
+  role          UserRole       @default(STUDENT)
+  studentId     String?        @unique
+  staffId       String?        @unique
+  department    String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  
+  // Relations
+  announcements Announcement[]
+  comments      Comment[]
+  schedules     Schedule[]     @relation("LecturerSchedules")
+  taughtCourses Course[]       @relation("CourseLecturer")
+  enrollments   Enrollment[]
+  notifications Notification[]
+
+  @@map("users")
+}
+
+model Announcement {
+  id             String         @id @default(uuid())
+  title          String
+  content        String         @db.Text
+  authorId       String
+  targetAudience TargetAudience @default(ALL)
+  pinned         Boolean        @default(false)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  
+  // Relations
+  author         User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments       Comment[]
+
+  @@map("announcements")
+}
+
+model Comment {
+  id             String       @id @default(uuid())
+  content        String       @db.Text
+  userId         String
+  announcementId String
+  createdAt      DateTime     @default(now())
+  
+  // Relations
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}
+
+model Venue {
+  id        String       @id @default(uuid())
+  name      String       @unique
+  building  String
+  capacity  Int
+  facilities String[]
+  status    VenueStatus  @default(AVAILABLE)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  
+  // Relations
+  schedules Schedule[]
+
+  @@map("venues")
+}
+
+model Schedule {
+  id         String    @id @default(uuid())
+  venueId    String
+  lecturerId String
+  courseId   String
+  dayOfWeek  DayOfWeek
+  startTime  String
+  endTime    String
+  semester   String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  
+  // Relations
+  venue      Venue     @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  lecturer   User      @relation("LecturerSchedules", fields: [lecturerId], references: [id], onDelete: Cascade)
+  course     Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@map("schedules")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String
+  message   String   @db.Text
+  link      String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model Course {
+  id          String        @id @default(uuid())
+  code        String        @unique
+  name        String
+  description String?
+  department  String?
+  credits     Int?
+  lecturerId  String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  lecturer    User          @relation("CourseLecturer", fields: [lecturerId], references: [id], onDelete: Cascade)
+  schedules   Schedule[]
+  enrollments Enrollment[]
+
+  @@map("courses")
+}
+
+model Enrollment {
+  id        String   @id @default(uuid())
+  courseId  String
+  studentId String
+  status    String?
+  createdAt DateTime @default(now())
+
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  student   User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, studentId])
+  @@map("enrollments")
+}
+

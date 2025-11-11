@@ -1,0 +1,729 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Smart University Communication and Venue Notification System API",
+    "version": "1.0.0",
+    "description": "A comprehensive backend system for university communication, announcements, venue management, and real-time notifications",
+    "contact": {
+      "name": "University of Zimbabwe",
+      "email": "support@uz.ac.zw"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000",
+      "description": "Development server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Authentication",
+      "description": "User authentication and authorization"
+    },
+    {
+      "name": "Users",
+      "description": "User management operations"
+    },
+    {
+      "name": "Announcements",
+      "description": "Announcement and communication management"
+    },
+    {
+      "name": "Comments",
+      "description": "Comment management"
+    },
+    {
+      "name": "Venues",
+      "description": "Lecture venue management"
+    },
+    {
+      "name": "Courses",
+      "description": "Course catalog and student enrollment"
+    },
+    {
+      "name": "Schedules",
+      "description": "Schedule and timetable management"
+    },
+    {
+      "name": "Notifications",
+      "description": "User notification management"
+    }
+  ],
+  "paths": {
+    "/api/auth/register": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Register a new user",
+        "description": "Create a new user account with role-based access",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password", "firstName", "lastName", "role"],
+                "properties": {
+                  "email": {"type": "string", "format": "email"},
+                  "password": {"type": "string", "minLength": 8},
+                  "firstName": {"type": "string"},
+                  "lastName": {"type": "string"},
+                  "role": {"type": "string", "enum": ["STUDENT", "LECTURER", "ADMIN"]},
+                  "studentId": {"type": "string"},
+                  "staffId": {"type": "string"},
+                  "department": {"type": "string"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {"description": "User registered successfully"},
+          "400": {"description": "Invalid input"}
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Login user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": {"type": "string", "format": "email"},
+                  "password": {"type": "string"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Login successful"},
+          "401": {"description": "Invalid credentials"}
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "tags": ["Authentication"],
+        "summary": "Get current user profile",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {"description": "User profile retrieved"},
+          "401": {"description": "Unauthorized"}
+        }
+      }
+    },
+    "/api/users": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Get all users (Admin only)",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "role", "in": "query", "schema": {"type": "string"}},
+          {"name": "department", "in": "query", "schema": {"type": "string"}},
+          {"name": "search", "in": "query", "schema": {"type": "string"}},
+          {"name": "page", "in": "query", "schema": {"type": "integer", "default": 1}},
+          {"name": "limit", "in": "query", "schema": {"type": "integer", "default": 10}}
+        ],
+        "responses": {
+          "200": {"description": "Users retrieved successfully"},
+          "403": {"description": "Forbidden"}
+        }
+      }
+    },
+    "/api/users/{id}": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Get user by ID",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {"description": "User retrieved"},
+          "404": {"description": "User not found"}
+        }
+      },
+      "put": {
+        "tags": ["Users"],
+        "summary": "Update user",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "firstName": {"type": "string"},
+                  "lastName": {"type": "string"},
+                  "department": {"type": "string"},
+                  "password": {"type": "string"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "User updated"},
+          "403": {"description": "Forbidden"}
+        }
+      },
+      "delete": {
+        "tags": ["Users"],
+        "summary": "Delete user (Admin only)",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {"description": "User deleted"},
+          "403": {"description": "Forbidden"}
+        }
+      }
+    },
+    "/api/announcements": {
+      "post": {
+        "tags": ["Announcements"],
+        "summary": "Create announcement (Lecturers/Admins)",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title", "content"],
+                "properties": {
+                  "title": {"type": "string"},
+                  "content": {"type": "string"},
+                  "targetAudience": {"type": "string", "enum": ["ALL", "STUDENTS", "LECTURERS"], "default": "ALL"},
+                  "pinned": {"type": "boolean", "default": false}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {"description": "Announcement created"},
+          "403": {"description": "Forbidden"}
+        }
+      },
+      "get": {
+        "tags": ["Announcements"],
+        "summary": "Get all announcements",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "targetAudience", "in": "query", "schema": {"type": "string"}},
+          {"name": "pinned", "in": "query", "schema": {"type": "boolean"}},
+          {"name": "search", "in": "query", "schema": {"type": "string"}},
+          {"name": "page", "in": "query", "schema": {"type": "integer", "default": 1}},
+          {"name": "limit", "in": "query", "schema": {"type": "integer", "default": 10}}
+        ],
+        "responses": {
+          "200": {"description": "Announcements retrieved"}
+        }
+      }
+    },
+    "/api/announcements/{id}": {
+      "get": {
+        "tags": ["Announcements"],
+        "summary": "Get announcement by ID",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {"description": "Announcement retrieved"},
+          "404": {"description": "Not found"}
+        }
+      },
+      "put": {
+        "tags": ["Announcements"],
+        "summary": "Update announcement (Author/Admin)",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {"type": "string"},
+                  "content": {"type": "string"},
+                  "targetAudience": {"type": "string", "enum": ["ALL", "STUDENTS", "LECTURERS"]},
+                  "pinned": {"type": "boolean"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Announcement updated"},
+          "403": {"description": "Forbidden"}
+        }
+      },
+      "delete": {
+        "tags": ["Announcements"],
+        "summary": "Delete announcement (Author/Admin)",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {"description": "Announcement deleted"},
+          "403": {"description": "Forbidden"}
+        }
+      }
+    },
+    "/api/announcements/{id}/comments": {
+      "post": {
+        "tags": ["Comments"],
+        "summary": "Add comment to announcement",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["content"],
+                "properties": {
+                  "content": {"type": "string"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {"description": "Comment added"},
+          "404": {"description": "Announcement not found"}
+        }
+      }
+    },
+    "/api/comments/{id}": {
+      "delete": {
+        "tags": ["Comments"],
+        "summary": "Delete comment (Author/Admin)",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {"description": "Comment deleted"},
+          "403": {"description": "Forbidden"}
+        }
+      }
+    },
+    "/api/venues": {
+      "post": {
+        "tags": ["Venues"],
+        "summary": "Create venue (Admin only)",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "building", "capacity"],
+                "properties": {
+                  "name": {"type": "string"},
+                  "building": {"type": "string"},
+                  "capacity": {"type": "integer"},
+                  "facilities": {"type": "array", "items": {"type": "string"}},
+                  "status": {"type": "string", "enum": ["AVAILABLE", "OCCUPIED", "MAINTENANCE"], "default": "AVAILABLE"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {"description": "Venue created"},
+          "403": {"description": "Forbidden"}
+        }
+      },
+      "get": {
+        "tags": ["Venues"],
+        "summary": "Get all venues",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "status", "in": "query", "schema": {"type": "string"}},
+          {"name": "building", "in": "query", "schema": {"type": "string"}},
+          {"name": "search", "in": "query", "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {"description": "Venues retrieved"}
+        }
+      }
+    },
+    "/api/venues/available": {
+      "get": {
+        "tags": ["Venues"],
+        "summary": "Check venue availability",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "dayOfWeek", "in": "query", "required": true, "schema": {"type": "string"}},
+          {"name": "startTime", "in": "query", "required": true, "schema": {"type": "string"}},
+          {"name": "endTime", "in": "query", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {"description": "Available venues retrieved"}
+        }
+      }
+    },
+    "/api/venues/{id}": {
+      "get": {
+        "tags": ["Venues"],
+        "summary": "Get venue by ID",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {"description": "Venue retrieved"},
+          "404": {"description": "Not found"}
+        }
+      },
+      "put": {
+        "tags": ["Venues"],
+        "summary": "Update venue (Admin only)",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {"description": "Venue updated"},
+          "403": {"description": "Forbidden"}
+        }
+      },
+      "delete": {
+        "tags": ["Venues"],
+        "summary": "Delete venue (Admin only)",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {"description": "Venue deleted"},
+          "403": {"description": "Forbidden"}
+        }
+      }
+    },
+    "/api/courses": {
+      "get": {
+        "tags": ["Courses"],
+        "summary": "List courses",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "department", "in": "query", "schema": {"type": "string"}},
+          {"name": "lecturerId", "in": "query", "schema": {"type": "string"}},
+          {"name": "search", "in": "query", "schema": {"type": "string"}},
+          {"name": "page", "in": "query", "schema": {"type": "integer", "default": 1, "minimum": 1}},
+          {"name": "limit", "in": "query", "schema": {"type": "integer", "default": 10, "minimum": 1}}
+        ],
+        "responses": {
+          "200": {"description": "Courses retrieved"}
+        }
+      },
+      "post": {
+        "tags": ["Courses"],
+        "summary": "Create course (Lecturers/Admins)",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["code", "name"],
+                "properties": {
+                  "code": {"type": "string"},
+                  "name": {"type": "string"},
+                  "description": {"type": "string"},
+                  "department": {"type": "string"},
+                  "credits": {"type": "integer"},
+                  "lecturerId": {"type": "string"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {"description": "Course created"},
+          "403": {"description": "Forbidden"}
+        }
+      }
+    },
+    "/api/courses/my": {
+      "get": {
+        "tags": ["Courses"],
+        "summary": "Get courses relevant to current user",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "page", "in": "query", "schema": {"type": "integer", "default": 1, "minimum": 1}},
+          {"name": "limit", "in": "query", "schema": {"type": "integer", "default": 10, "minimum": 1}}
+        ],
+        "responses": {
+          "200": {"description": "User courses retrieved"}
+        }
+      }
+    },
+    "/api/courses/{id}": {
+      "get": {
+        "tags": ["Courses"],
+        "summary": "Get course by ID",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {"description": "Course retrieved"},
+          "404": {"description": "Course not found"}
+        }
+      },
+      "put": {
+        "tags": ["Courses"],
+        "summary": "Update course (Lecturer/Admin)",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {"type": "string"},
+                  "name": {"type": "string"},
+                  "description": {"type": "string"},
+                  "department": {"type": "string"},
+                  "credits": {"type": "integer"},
+                  "lecturerId": {"type": "string"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Course updated"},
+          "403": {"description": "Forbidden"}
+        }
+      },
+      "delete": {
+        "tags": ["Courses"],
+        "summary": "Delete course (Lecturer/Admin)",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {"description": "Course deleted"},
+          "403": {"description": "Forbidden"}
+        }
+      }
+    },
+    "/api/courses/{id}/enroll": {
+      "post": {
+        "tags": ["Courses"],
+        "summary": "Enroll in course (Student)",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "201": {"description": "Enrollment created"},
+          "400": {"description": "Already enrolled"}
+        }
+      },
+      "delete": {
+        "tags": ["Courses"],
+        "summary": "Drop course (Student)",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {"description": "Enrollment removed"},
+          "400": {"description": "Not enrolled"}
+        }
+      }
+    },
+    "/api/courses/{id}/students": {
+      "get": {
+        "tags": ["Courses"],
+        "summary": "List students enrolled in a course",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "page", "in": "query", "schema": {"type": "integer", "default": 1, "minimum": 1}},
+          {"name": "limit", "in": "query", "schema": {"type": "integer", "default": 20, "minimum": 1}}
+        ],
+        "responses": {
+          "200": {"description": "Course roster retrieved"},
+          "403": {"description": "Forbidden"}
+        }
+      }
+    },
+    "/api/schedules": {
+      "post": {
+        "tags": ["Schedules"],
+        "summary": "Create schedule (Lecturers/Admins)",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["venueId", "courseId", "dayOfWeek", "startTime", "endTime", "semester"],
+                "properties": {
+                  "venueId": {"type": "string"},
+                  "courseId": {"type": "string"},
+                  "dayOfWeek": {"type": "string", "enum": ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"]},
+                  "startTime": {"type": "string", "pattern": "^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$"},
+                  "endTime": {"type": "string", "pattern": "^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$"},
+                  "semester": {"type": "string"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {"description": "Schedule created"},
+          "400": {"description": "Time slot already booked"}
+        }
+      },
+      "get": {
+        "tags": ["Schedules"],
+        "summary": "Get all schedules",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "venueId", "in": "query", "schema": {"type": "string"}},
+          {"name": "lecturerId", "in": "query", "schema": {"type": "string"}},
+          {"name": "dayOfWeek", "in": "query", "schema": {"type": "string"}},
+          {"name": "semester", "in": "query", "schema": {"type": "string"}},
+          {"name": "courseId", "in": "query", "schema": {"type": "string"}},
+          {"name": "courseCode", "in": "query", "schema": {"type": "string"}},
+          {"name": "page", "in": "query", "schema": {"type": "integer", "default": 1, "minimum": 1}},
+          {"name": "limit", "in": "query", "schema": {"type": "integer", "default": 20, "minimum": 1}}
+        ],
+        "responses": {
+          "200": {"description": "Schedules retrieved"}
+        }
+      }
+    },
+    "/api/schedules/my-schedule": {
+      "get": {
+        "tags": ["Schedules"],
+        "summary": "Get current user's schedule",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {"description": "User schedule retrieved"}
+        }
+      }
+    },
+    "/api/schedules/{id}": {
+      "put": {
+        "tags": ["Schedules"],
+        "summary": "Update schedule (Author/Admin)",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "venueId": {"type": "string"},
+                  "courseId": {"type": "string"},
+                  "dayOfWeek": {"type": "string", "enum": ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"]},
+                  "startTime": {"type": "string", "pattern": "^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$"},
+                  "endTime": {"type": "string", "pattern": "^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$"},
+                  "semester": {"type": "string"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Schedule updated"},
+          "403": {"description": "Forbidden"}
+        }
+      },
+      "delete": {
+        "tags": ["Schedules"],
+        "summary": "Delete schedule (Author/Admin)",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {"description": "Schedule deleted"},
+          "403": {"description": "Forbidden"}
+        }
+      }
+    },
+    "/api/notifications": {
+      "get": {
+        "tags": ["Notifications"],
+        "summary": "Get user notifications",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "unread", "in": "query", "schema": {"type": "boolean"}}
+        ],
+        "responses": {
+          "200": {"description": "Notifications retrieved"}
+        }
+      }
+    },
+    "/api/notifications/read-all": {
+      "put": {
+        "tags": ["Notifications"],
+        "summary": "Mark all notifications as read",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {"description": "All notifications marked as read"}
+        }
+      }
+    },
+    "/api/notifications/{id}/read": {
+      "put": {
+        "tags": ["Notifications"],
+        "summary": "Mark notification as read",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {"description": "Notification marked as read"}
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}
+
