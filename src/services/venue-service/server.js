@@ -1,10 +1,40 @@
-const prisma = require('../config/db');
-const { AppError } = require('../utils/errorHandler');
-const { validateRequired, validateVenueStatus } = require('../utils/validator');
-const { createNotification } = require('../services/notificationService');
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const { PrismaClient } = require('@prisma/client');
+const { AppError } = require('../../utils/errorHandler');
+const { validateRequired, validateVenueStatus } = require('../../utils/validator');
+const { serviceRequest } = require('../../shared/utils');
+const protect = require('../../middleware/auth');
+const authorize = require('../../middleware/role');
+
+const app = express();
+const PORT = process.env.VENUE_SERVICE_PORT || 3006;
+
+// Initialize Prisma Client
+const prisma = new PrismaClient();
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Simple request logging
+app.use((req, res, next) => {
+  console.log(`[VENUE SERVICE] ${new Date().toISOString()} ${req.method} ${req.path}`);
+  next();
+});
+
+// Health check
+app.get('/health', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Venue Service is running',
+    timestamp: new Date().toISOString()
+  });
+});
 
 // @desc    Create venue
-// @route   POST /api/venues
+// @route   POST /
 // @access  Private/Admin
 const createVenue = async (req, res, next) => {
   try {
@@ -36,7 +66,7 @@ const createVenue = async (req, res, next) => {
 };
 
 // @desc    Get all venues
-// @route   GET /api/venues
+// @route   GET /
 // @access  Private
 const getVenues = async (req, res, next) => {
   try {
@@ -79,7 +109,7 @@ const getVenues = async (req, res, next) => {
 };
 
 // @desc    Get single venue
-// @route   GET /api/venues/:id
+// @route   GET /:id
 // @access  Private
 const getVenue = async (req, res, next) => {
   try {
@@ -95,6 +125,7 @@ const getVenue = async (req, res, next) => {
                 id: true,
                 firstName: true,
                 lastName: true,
+                email: true, // Added email for consistency
                 staffId: true
               }
             }
@@ -121,7 +152,7 @@ const getVenue = async (req, res, next) => {
 };
 
 // @desc    Update venue
-// @route   PUT /api/venues/:id
+// @route   PUT /:id
 // @access  Private/Admin
 const updateVenue = async (req, res, next) => {
   try {
@@ -158,13 +189,22 @@ const updateVenue = async (req, res, next) => {
       if (status !== venue.status && venue.schedules.length > 0) {
         const lecturerIds = [...new Set(venue.schedules.map(s => s.lecturerId))];
         
+        // We'll try to call notification service via HTTP for each lecturer
+        // In production, this should be a bulk event/request
         for (const lecturerId of lecturerIds) {
-          await createNotification({
-            userId: lecturerId,
-            type: 'VENUE_STATUS_CHANGE',
-            message: `Venue ${venue.name} status changed to ${status}`,
-            link: `/venues/${id}`
-          });
+          try {
+            await serviceRequest('notification-service', '/', {
+              method: 'POST',
+              data: {
+                userId: lecturerId,
+                type: 'VENUE_STATUS_CHANGE',
+                message: `Venue ${venue.name} status changed to ${status}`,
+                link: `/venues/${id}`
+              }
+            });
+          } catch (err) {
+            console.error(`Failed to notify lecturer ${lecturerId}:`, err.message);
+          }
         }
       }
     }
@@ -184,7 +224,7 @@ const updateVenue = async (req, res, next) => {
 };
 
 // @desc    Delete venue
-// @route   DELETE /api/venues/:id
+// @route   DELETE /:id
 // @access  Private/Admin
 const deleteVenue = async (req, res, next) => {
   try {
@@ -212,7 +252,7 @@ const deleteVenue = async (req, res, next) => {
 };
 
 // @desc    Check venue availability
-// @route   GET /api/venues/available
+// @route   GET /available
 // @access  Private
 const checkAvailability = async (req, res, next) => {
   try {
@@ -255,12 +295,48 @@ const checkAvailability = async (req, res, next) => {
   }
 };
 
-module.exports = {
-  createVenue,
-  getVenues,
-  getVenue,
-  updateVenue,
-  deleteVenue,
-  checkAvailability
-};
+// Routes - All require authentication
+app.use(protect);
+
+app.get('/available', checkAvailability);
+app.post('/', authorize('ADMIN'), createVenue);
+app.get('/', getVenues);
+app.get('/:id', getVenue);
+app.put('/:id', authorize('ADMIN'), updateVenue);
+app.delete('/:id', authorize('ADMIN'), deleteVenue);
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    error: 'Route not found'
+  });
+});
+
+// Error handler
+app.use((err, req, res, next) => {
+  console.error('Venue Service Error:', err);
+  res.status(err.statusCode || 500).json({
+    success: false,
+    error: err.message || 'Internal server error'
+  });
+});
+
+// Start server
+app.listen(PORT, () => {
+  console.log('\n=================================');
+  console.log(' Venue Service is running');
+  console.log(` Port: ${PORT}`);
+  console.log(` Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log('=================================\n');
+});
+
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  await prisma.$disconnect();
+  process.exit(0);
+});
+
+module.exports = app;
 

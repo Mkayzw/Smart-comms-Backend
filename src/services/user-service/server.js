@@ -1,10 +1,40 @@
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
 const bcrypt = require('bcryptjs');
-const prisma = require('../config/db');
-const { AppError } = require('../utils/errorHandler');
-const { validateEmail, validatePassword, validateRequired } = require('../utils/validator');
+const { PrismaClient } = require('@prisma/client');
+const { AppError } = require('../../utils/errorHandler');
+const { validatePassword } = require('../../utils/validator');
+const protect = require('../../middleware/auth');
+const authorize = require('../../middleware/role');
+
+const app = express();
+const PORT = process.env.USER_SERVICE_PORT || 3008;
+
+// Initialize Prisma Client
+const prisma = new PrismaClient();
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Simple request logging
+app.use((req, res, next) => {
+  console.log(`[USER SERVICE] ${new Date().toISOString()} ${req.method} ${req.path}`);
+  next();
+});
+
+// Health check
+app.get('/health', (req, res) => {
+  res.json({
+    success: true,
+    message: 'User Service is running',
+    timestamp: new Date().toISOString()
+  });
+});
 
 // @desc    Get all users
-// @route   GET /api/users
+// @route   GET /
 // @access  Private/Admin
 const getUsers = async (req, res, next) => {
   try {
@@ -69,7 +99,7 @@ const getUsers = async (req, res, next) => {
 };
 
 // @desc    Get single user
-// @route   GET /api/users/:id
+// @route   GET /:id
 // @access  Private
 const getUser = async (req, res, next) => {
   try {
@@ -111,7 +141,7 @@ const getUser = async (req, res, next) => {
 };
 
 // @desc    Update user
-// @route   PUT /api/users/:id
+// @route   PUT /:id
 // @access  Private
 const updateUser = async (req, res, next) => {
   try {
@@ -173,7 +203,7 @@ const updateUser = async (req, res, next) => {
 };
 
 // @desc    Delete user
-// @route   DELETE /api/users/:id
+// @route   DELETE /:id
 // @access  Private/Admin
 const deleteUser = async (req, res, next) => {
   try {
@@ -200,10 +230,46 @@ const deleteUser = async (req, res, next) => {
   }
 };
 
-module.exports = {
-  getUsers,
-  getUser,
-  updateUser,
-  deleteUser
-};
+// Routes
+app.use(protect);
+
+app.get('/', authorize('ADMIN'), getUsers);
+app.get('/:id', getUser);
+app.put('/:id', updateUser);
+app.delete('/:id', authorize('ADMIN'), deleteUser);
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    error: 'Route not found'
+  });
+});
+
+// Error handler
+app.use((err, req, res, next) => {
+  console.error('User Service Error:', err);
+  res.status(err.statusCode || 500).json({
+    success: false,
+    error: err.message || 'Internal server error'
+  });
+});
+
+// Start server
+app.listen(PORT, () => {
+  console.log('\n=================================');
+  console.log(' User Service is running');
+  console.log(` Port: ${PORT}`);
+  console.log(` Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log('=================================\n');
+});
+
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  await prisma.$disconnect();
+  process.exit(0);
+});
+
+module.exports = app;
 
