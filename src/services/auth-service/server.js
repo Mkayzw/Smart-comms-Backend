@@ -125,28 +125,38 @@ const register = async (req, res, next) => {
 // @access  Public
 const login = async (req, res, next) => {
   try {
+    console.log('[Auth Service] Login request received', req.body);
     const { email, password } = req.body;
 
     // Validate required fields
+    console.log('[Auth Service] Validating fields...');
     validateRequired(['email', 'password'], req.body);
 
     // Check for user
+    console.log('[Auth Service] Checking for user in DB...');
     const user = await prisma.user.findUnique({
       where: { email }
     });
+    console.log('[Auth Service] User found:', user ? 'Yes' : 'No');
 
     if (!user) {
       return next(new AppError('Invalid credentials', 401));
     }
 
     // Check if password matches
-    const isMatch = await bcrypt.compare(password, user.password);
+    console.log('[Auth Service] Comparing passwords (sync)...');
+    console.log(`[Auth Service] Input password type: ${typeof password}, DB password type: ${typeof user.password}`);
+    
+    // Use compareSync to avoid potential async hanging issues
+    const isMatch = bcrypt.compareSync(password, user.password);
+    console.log('[Auth Service] Password match result:', isMatch);
 
     if (!isMatch) {
       return next(new AppError('Invalid credentials', 401));
     }
 
     // Generate token
+    console.log('[Auth Service] Generating token...');
     const token = generateToken(user.id);
 
     // Return user without password
@@ -222,6 +232,64 @@ const validateToken = async (req, res, next) => {
   }
 };
 
+// @desc    Get current user profile from token
+// @route   GET /me
+// @access  Private
+const getMe = async (req, res, next) => {
+  try {
+    // Extract token from Authorization header
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        success: false,
+        error: 'No token provided'
+      });
+    }
+
+    const token = authHeader.split(' ')[1];
+
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Get user from database
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.id },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        department: true,
+        studentId: true,
+        staffId: true,
+        createdAt: true
+      }
+    });
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: user
+    });
+  } catch (error) {
+    if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid or expired token'
+      });
+    }
+    next(error);
+  }
+};
+
 // @desc    Get current user profile
 // @route   GET /profile
 // @access  Private
@@ -249,6 +317,7 @@ const getProfile = async (req, res, next) => {
 app.post('/register', register);
 app.post('/login', login);
 app.post('/validate', validateToken);
+app.get('/me', getMe);
 app.get('/profile', getProfile);
 
 // 404 handler

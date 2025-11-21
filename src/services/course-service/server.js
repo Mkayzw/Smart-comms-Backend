@@ -579,6 +579,34 @@ const getCourseStudents = async (req, res, next) => {
   }
 };
 
+// @desc    Get all unique departments
+// @route   GET /departments
+// @access  Private
+const getDepartments = async (req, res, next) => {
+  try {
+    const departments = await prisma.course.findMany({
+      where: {
+        department: {
+          not: null,
+        },
+      },
+      select: {
+        department: true,
+      },
+      distinct: ['department'],
+    });
+
+    const departmentList = departments.map(d => d.department).sort();
+
+    res.status(200).json({
+      success: true,
+      data: departmentList,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc    Get courses relevant to the current user
 // @route   GET /my/all  (Changed from /my to /my/all to avoid conflict with /:id if id can be "my" - though unlikely if id is uuid)
 // Actually, express router matches strictly, so /my is fine if defined before /:id
@@ -676,11 +704,12 @@ const getMyCourses = async (req, res, next) => {
 app.use(protect);
 
 app.get('/my', getMyCourses); 
+app.get('/departments', getDepartments);
 app.get('/', getCourses);
-app.post('/', authorize('LECTURER', 'ADMIN'), createCourse);
+app.post('/', authorize('ADMIN'), createCourse);
 app.get('/:id', getCourse);
-app.put('/:id', authorize('LECTURER', 'ADMIN'), updateCourse);
-app.delete('/:id', authorize('LECTURER', 'ADMIN'), deleteCourse);
+app.put('/:id', authorize('ADMIN', 'LECTURER'), updateCourse);
+app.delete('/:id', authorize('ADMIN'), deleteCourse);
 app.post('/:id/enroll', authorize('STUDENT'), enrollInCourse);
 app.delete('/:id/enroll', authorize('STUDENT'), dropCourse);
 app.get('/:id/students', authorize('LECTURER', 'ADMIN'), getCourseStudents);

@@ -15,18 +15,8 @@ const app = express();
 const server = http.createServer(app);
 
 // Middleware
-// Configure CORS to allow origins specified in FRONTEND_URL env var
-app.use(cors({
-  origin: (origin, callback) => {
-    const raw = process.env.FRONTEND_URL || 'http://localhost:5173';
-    const allowed = raw.split(',').map((s) => s.trim());
-    // allow requests with no origin (curl, server-to-server)
-    if (!origin) return callback(null, true);
-    if (allowed.includes(origin)) return callback(null, true);
-    return callback(new Error('CORS policy: Origin not allowed'));
-  },
-  credentials: true // Allow credentials (cookies, authorization headers, etc.)
-}));
+// Allow all origins for class project - no CORS restrictions
+app.use(cors());
 app.use(logger);
 
 // Rate limiting for auth routes
@@ -64,36 +54,42 @@ app.use('/api/auth', authLimiter, (req, res) => {
 const courseServiceProxy = createProxyMiddleware({
   target: 'http://localhost:3003',
   changeOrigin: true,
+  pathRewrite: { '^/api/courses': '' },
   logLevel: 'warn'
 });
 
 const notificationServiceProxy = createProxyMiddleware({
   target: 'http://localhost:3004',
   changeOrigin: true,
+  pathRewrite: { '^/api/notifications': '' },
   logLevel: 'warn'
 });
 
 const scheduleServiceProxy = createProxyMiddleware({
   target: 'http://localhost:3005',
   changeOrigin: true,
+  pathRewrite: { '^/api/schedules': '' },
   logLevel: 'warn'
 });
 
 const venueServiceProxy = createProxyMiddleware({
   target: 'http://localhost:3006',
   changeOrigin: true,
+  pathRewrite: { '^/api/venues': '' },
   logLevel: 'warn'
 });
 
 const announcementServiceProxy = createProxyMiddleware({
   target: 'http://localhost:3007',
   changeOrigin: true,
+  pathRewrite: { '^/api/announcements': '' },
   logLevel: 'warn'
 });
 
 const userServiceProxy = createProxyMiddleware({
   target: 'http://localhost:3008',
   changeOrigin: true,
+  pathRewrite: { '^/api/users': '' },
   logLevel: 'warn'
 });
 
@@ -109,8 +105,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // API Documentation
-app.use('/api-docs', swaggerUi.serve);
-app.use('/api-docs/swagger.json', swaggerUi.setup(swaggerDocument));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+// app.use('/api-docs/swagger.json', swaggerUi.setup(swaggerDocument)); // Removed incorrect line
 
 // Health check route
 app.get('/health', (req, res) => {

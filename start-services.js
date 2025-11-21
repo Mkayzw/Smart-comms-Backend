@@ -60,7 +60,7 @@ const services = [
 const startService = (service) => {
   const fullPath = path.join(__dirname, service.script);
   
-  const child = spawn('node', [fullPath], {
+  const child = spawn('node', ['--no-deprecation', fullPath], {
     env: { ...process.env, PORT: service.port },
     stdio: 'pipe'
   });

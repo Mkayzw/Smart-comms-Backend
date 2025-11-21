@@ -46,6 +46,7 @@ model User {
   studentId     String?        @unique
   staffId       String?        @unique
   department    String?
+  pushToken     String?        @unique
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   

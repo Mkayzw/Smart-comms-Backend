@@ -230,12 +230,39 @@ const deleteUser = async (req, res, next) => {
   }
 };
 
+// @desc    Update push token for current user
+// @route   PUT /me/push-token
+// @access  Private
+const updatePushToken = async (req, res, next) => {
+  try {
+    const { pushToken } = req.body;
+    const userId = req.user.id;
+
+    if (!pushToken) {
+      return next(new AppError('Push token is required', 400));
+    }
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { pushToken },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Push token updated successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Routes
 app.use(protect);
 
 app.get('/', authorize('ADMIN'), getUsers);
+app.put('/me/push-token', updatePushToken);
 app.get('/:id', getUser);
-app.put('/:id', updateUser);
+app.put('/:id', authorize('ADMIN'), updateUser);
 app.delete('/:id', authorize('ADMIN'), deleteUser);
 
 // 404 handler

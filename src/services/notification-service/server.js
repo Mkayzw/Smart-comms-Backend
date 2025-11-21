@@ -1,4 +1,5 @@
 require('dotenv').config();
+const { Expo } = require('expo-server-sdk');
 const express = require('express');
 const cors = require('cors');
 const http = require('http');
@@ -6,6 +7,7 @@ const { Server } = require('socket.io');
 const { PrismaClient } = require('@prisma/client');
 const { AppError } = require('../../utils/errorHandler');
 const { eventBus } = require('../../shared/utils');
+const protect = require('../../middleware/auth');
 
 const app = express();
 const server = http.createServer(app);
@@ -21,6 +23,7 @@ const io = new Server(server, {
 
 // Initialize Prisma Client
 const prisma = new PrismaClient();
+const expo = new Expo();
 
 // Store connected users
 const connectedUsers = new Map();
@@ -97,26 +100,31 @@ io.on('connection', (socket) => {
 // @access  Private
 const getNotifications = async (req, res, next) => {
   try {
-    const { userId, unread } = req.query;
+    const { unreadOnly, limit = 50 } = req.query;
+    const userId = req.user.id;
     
-    // In a real implementation, we would extract userId from token
-    const targetUserId = userId || 'demo-user-id';
-    
-    const where = { userId: targetUserId };
-    
-    if (unread === 'true') {
+    const where = { userId };
+    if (unreadOnly === 'true') {
       where.read = false;
     }
     
-    const notifications = await prisma.notification.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      take: 50 // Limit to 50 most recent
-    });
+    const take = parseInt(limit);
+
+    const [notifications, total] = await Promise.all([
+      prisma.notification.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        take,
+      }),
+      prisma.notification.count({ where })
+    ]);
     
     res.status(200).json({
       success: true,
-      data: notifications
+      data: notifications,
+      pagination: {
+        total,
+      }
     });
   } catch (error) {
     next(error);
@@ -130,6 +138,11 @@ const createNotification = async (req, res, next) => {
   try {
     const { userId, type, message, link } = req.body;
     
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+        return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
     const notification = await prisma.notification.create({
       data: {
         userId,
@@ -139,8 +152,23 @@ const createNotification = async (req, res, next) => {
       }
     });
     
-    // Send real-time notification
+    // Send real-time notification via Socket.IO
     io.to(`user:${userId}`).emit('notification', notification);
+
+    // Send push notification if token exists
+    if (user.pushToken && Expo.isExpoPushToken(user.pushToken)) {
+        const messages = [{
+            to: user.pushToken,
+            sound: 'default',
+            body: message,
+            data: { withSome: 'data' }, // You can add extra data here
+        }];
+        try {
+            await expo.sendPushNotificationsAsync(messages);
+        } catch (error) {
+            console.error('Error sending push notification:', error);
+        }
+    }
     
     res.status(201).json({
       success: true,
@@ -157,15 +185,24 @@ const createNotification = async (req, res, next) => {
 const markNotificationAsRead = async (req, res, next) => {
   try {
     const { id } = req.params;
-    
-    const notification = await prisma.notification.update({
+    const userId = req.user.id;
+
+    const notification = await prisma.notification.findFirst({
+      where: { id, userId }
+    });
+
+    if (!notification) {
+      return next(new AppError('Notification not found or you are not authorized', 404));
+    }
+
+    const updatedNotification = await prisma.notification.update({
       where: { id },
       data: { read: true }
     });
     
     res.status(200).json({
       success: true,
-      data: notification
+      data: updatedNotification
     });
   } catch (error) {
     next(error);
@@ -173,18 +210,15 @@ const markNotificationAsRead = async (req, res, next) => {
 };
 
 // @desc    Mark all notifications as read
-// @route   PUT /read-all
+// @route   PUT /read/all
 // @access  Private
 const markAllNotificationsAsRead = async (req, res, next) => {
   try {
-    const { userId } = req.body;
-    
-    // In a real implementation, we would extract userId from token
-    const targetUserId = userId || 'demo-user-id';
+    const userId = req.user.id;
     
     const result = await prisma.notification.updateMany({
       where: {
-        userId: targetUserId,
+        userId,
         read: false
       },
       data: { read: true }
@@ -202,10 +236,12 @@ const markAllNotificationsAsRead = async (req, res, next) => {
 };
 
 // Routes
+app.use(protect);
+
 app.get('/', getNotifications);
 app.post('/', createNotification);
 app.put('/:id/read', markNotificationAsRead);
-app.put('/read-all', markAllNotificationsAsRead);
+app.put('/read/all', markAllNotificationsAsRead);
 
 // 404 handler
 app.use((req, res) => {
