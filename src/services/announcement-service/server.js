@@ -1,10 +1,40 @@
-const prisma = require('../config/db');
-const { AppError } = require('../utils/errorHandler');
-const { validateRequired, validateTargetAudience } = require('../utils/validator');
-const { createNotification } = require('../services/notificationService');
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const { PrismaClient } = require('@prisma/client');
+const { AppError } = require('../../utils/errorHandler');
+const { validateRequired, validateTargetAudience } = require('../../utils/validator');
+const { serviceRequest } = require('../../shared/utils');
+const protect = require('../../middleware/auth');
+const authorize = require('../../middleware/role');
+
+const app = express();
+const PORT = process.env.ANNOUNCEMENT_SERVICE_PORT || 3007;
+
+// Initialize Prisma Client
+const prisma = new PrismaClient();
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Simple request logging
+app.use((req, res, next) => {
+  console.log(`[ANNOUNCEMENT SERVICE] ${new Date().toISOString()} ${req.method} ${req.path}`);
+  next();
+});
+
+// Health check
+app.get('/health', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Announcement Service is running',
+    timestamp: new Date().toISOString()
+  });
+});
 
 // @desc    Create announcement
-// @route   POST /api/announcements
+// @route   POST /
 // @access  Private (Lecturers/Admins)
 const createAnnouncement = async (req, res, next) => {
   try {
@@ -37,13 +67,20 @@ const createAnnouncement = async (req, res, next) => {
     });
 
     // Create notifications for targeted users
-    await createNotification({
-      type: 'NEW_ANNOUNCEMENT',
-      message: `New announcement: ${title}`,
-      link: `/announcements/${announcement.id}`,
-      targetAudience,
-      excludeUserId: req.user.id
-    });
+    try {
+      await serviceRequest('notification-service', '/', {
+        method: 'POST',
+        data: {
+          type: 'NEW_ANNOUNCEMENT',
+          message: `New announcement: ${title}`,
+          link: `/announcements/${announcement.id}`,
+          targetAudience,
+          excludeUserId: req.user.id
+        }
+      });
+    } catch (err) {
+      console.error('Failed to send announcement notification', err);
+    }
 
     res.status(201).json({
       success: true,
@@ -55,7 +92,7 @@ const createAnnouncement = async (req, res, next) => {
 };
 
 // @desc    Get all announcements
-// @route   GET /api/announcements
+// @route   GET /
 // @access  Private
 const getAnnouncements = async (req, res, next) => {
   try {
@@ -132,7 +169,7 @@ const getAnnouncements = async (req, res, next) => {
 };
 
 // @desc    Get single announcement
-// @route   GET /api/announcements/:id
+// @route   GET /:id
 // @access  Private
 const getAnnouncement = async (req, res, next) => {
   try {
@@ -179,7 +216,7 @@ const getAnnouncement = async (req, res, next) => {
 };
 
 // @desc    Update announcement
-// @route   PUT /api/announcements/:id
+// @route   PUT /:id
 // @access  Private (Author/Admin)
 const updateAnnouncement = async (req, res, next) => {
   try {
@@ -235,7 +272,7 @@ const updateAnnouncement = async (req, res, next) => {
 };
 
 // @desc    Delete announcement
-// @route   DELETE /api/announcements/:id
+// @route   DELETE /:id
 // @access  Private (Author/Admin)
 const deleteAnnouncement = async (req, res, next) => {
   try {
@@ -268,7 +305,7 @@ const deleteAnnouncement = async (req, res, next) => {
 };
 
 // @desc    Add comment to announcement
-// @route   POST /api/announcements/:id/comments
+// @route   POST /:id/comments
 // @access  Private
 const addComment = async (req, res, next) => {
   try {
@@ -305,12 +342,19 @@ const addComment = async (req, res, next) => {
 
     // Notify announcement author
     if (announcement.authorId !== req.user.id) {
-      await createNotification({
-        userId: announcement.authorId,
-        type: 'NEW_COMMENT',
-        message: `${req.user.firstName} ${req.user.lastName} commented on your announcement`,
-        link: `/announcements/${id}`
-      });
+      try {
+        await serviceRequest('notification-service', '/', {
+          method: 'POST',
+          data: {
+            userId: announcement.authorId,
+            type: 'NEW_COMMENT',
+            message: `${req.user.firstName} ${req.user.lastName} commented on your announcement`,
+            link: `/announcements/${id}`
+          }
+        });
+      } catch (err) {
+        console.error('Failed to send comment notification', err);
+      }
     }
 
     res.status(201).json({
@@ -323,8 +367,9 @@ const addComment = async (req, res, next) => {
 };
 
 // @desc    Delete comment
-// @route   DELETE /api/comments/:id
+// @route   DELETE /comments/:id
 // @access  Private (Author/Admin)
+// Note: URL path is slightly inconsistent in monolithic version vs service, adapting
 const deleteComment = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -355,13 +400,62 @@ const deleteComment = async (req, res, next) => {
   }
 };
 
-module.exports = {
-  createAnnouncement,
-  getAnnouncements,
-  getAnnouncement,
-  updateAnnouncement,
-  deleteAnnouncement,
-  addComment,
-  deleteComment
-};
+// Routes
+app.use(protect);
+
+app.post('/', authorize('LECTURER', 'ADMIN'), createAnnouncement);
+app.get('/', getAnnouncements);
+app.get('/:id', getAnnouncement);
+app.put('/:id', updateAnnouncement);
+app.delete('/:id', deleteAnnouncement);
+
+app.post('/:id/comments', addComment);
+// DELETE comment route needs to be handled.
+// The original route was /api/comments/:id in monolithic? No, it was /api/announcements/...
+// Wait, look at old routes file: `router.delete('/:id', deleteAnnouncement);`
+// But `deleteComment` was in controller. Where was it routed?
+// It was likely missing in routes or I missed it.
+// Ah, the old `announcementRoutes.js` only had `router.post('/:id/comments', addComment);`
+// It seems `deleteComment` wasn't exposed in `announcementRoutes.js`.
+// But `commentRoutes.js` might have existed?
+// Let's check if `commentRoutes.js` exists in file list. Yes it does.
+// We should include comment deletion here for completeness or in a separate comment service (overkill).
+// Let's put it under `/comments/:id` here.
+app.delete('/comments/:id', deleteComment);
+
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    error: 'Route not found'
+  });
+});
+
+// Error handler
+app.use((err, req, res, next) => {
+  console.error('Announcement Service Error:', err);
+  res.status(err.statusCode || 500).json({
+    success: false,
+    error: err.message || 'Internal server error'
+  });
+});
+
+// Start server
+app.listen(PORT, () => {
+  console.log('\n=================================');
+  console.log(' Announcement Service is running');
+  console.log(` Port: ${PORT}`);
+  console.log(` Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log('=================================\n');
+});
+
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  await prisma.$disconnect();
+  process.exit(0);
+});
+
+module.exports = app;
 

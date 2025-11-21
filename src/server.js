@@ -2,66 +2,21 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const http = require('http');
-const { Server } = require('socket.io');
+const { createProxyMiddleware } = require('http-proxy-middleware');
 const swaggerUi = require('swagger-ui-express');
 const rateLimit = require('express-rate-limit');
 
-const prisma = require('./config/db');
 const { errorHandler } = require('./utils/errorHandler');
 const logger = require('./utils/logger');
-const socketHandler = require('./socket/socketHandler');
 const swaggerDocument = require('./config/swagger.json');
-
-// Import routes
-const authRoutes = require('./routes/authRoutes');
-const userRoutes = require('./routes/userRoutes');
-const announcementRoutes = require('./routes/announcementRoutes');
-const commentRoutes = require('./routes/commentRoutes');
-const venueRoutes = require('./routes/venueRoutes');
-const scheduleRoutes = require('./routes/scheduleRoutes');
-const notificationRoutes = require('./routes/notificationRoutes');
-const courseRoutes = require('./routes/courseRoutes');
 
 // Initialize express app
 const app = express();
 const server = http.createServer(app);
 
-// Initialize Socket.io
-const io = new Server(server, {
-  cors: {
-    // Allow origins defined in environment variable FRONTEND_URL (comma separated)
-    // e.g. FRONTEND_URL="https://my-frontend.vercel.app,https://staging.example.com"
-    origin: (origin, callback) => {
-      const raw = process.env.FRONTEND_URL || 'http://localhost:5173';
-      const allowed = raw.split(',').map((s) => s.trim());
-      // allow requests with no origin (like curl/postman or server-to-server)
-      if (!origin) return callback(null, true);
-      if (allowed.includes(origin)) return callback(null, true);
-      return callback(new Error('CORS policy: Origin not allowed'));
-    },
-    credentials: true
-  }
-});
-
-// Initialize socket handler and export for use in controllers
-const socketAPI = socketHandler(io);
-global.socketAPI = socketAPI;
-
 // Middleware
-// Configure CORS to allow origins specified in FRONTEND_URL env var
-app.use(cors({
-  origin: (origin, callback) => {
-    const raw = process.env.FRONTEND_URL || 'http://localhost:5173';
-    const allowed = raw.split(',').map((s) => s.trim());
-    // allow requests with no origin (curl, server-to-server)
-    if (!origin) return callback(null, true);
-    if (allowed.includes(origin)) return callback(null, true);
-    return callback(new Error('CORS policy: Origin not allowed'));
-  },
-  credentials: true // Allow credentials (cookies, authorization headers, etc.)
-}));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Allow all origins for class project - no CORS restrictions
+app.use(cors());
 app.use(logger);
 
 // Rate limiting for auth routes
@@ -71,35 +26,103 @@ const authLimiter = rateLimit({
   message: 'Too many requests from this IP, please try again later.'
 });
 
+// Simple proxy for auth service using http-proxy
+const httpProxy = require('http-proxy');
+
+const authProxy = httpProxy.createProxyServer({
+  target: 'http://localhost:3001',
+  changeOrigin: true,
+  preserveHostHdr: true,
+  xfwd: true
+});
+
+// Proxy routes to services
+// NOTE: Proxies must be defined BEFORE body parsers (express.json) to avoid stream consumption issues
+app.use('/api/auth', authLimiter, (req, res) => {
+  console.log('Received request for:', req.path, req.method);
+  authProxy.web(req, res, (err) => {
+    if (err) {
+      console.error('Proxy error:', err);
+      res.status(500).json({
+        success: false,
+        error: 'Proxy error: ' + err.message
+      });
+    }
+  });
+});
+
+const courseServiceProxy = createProxyMiddleware({
+  target: 'http://localhost:3003',
+  changeOrigin: true,
+  pathRewrite: { '^/api/courses': '' },
+  logLevel: 'warn'
+});
+
+const notificationServiceProxy = createProxyMiddleware({
+  target: 'http://localhost:3004',
+  changeOrigin: true,
+  pathRewrite: { '^/api/notifications': '' },
+  logLevel: 'warn'
+});
+
+const scheduleServiceProxy = createProxyMiddleware({
+  target: 'http://localhost:3005',
+  changeOrigin: true,
+  pathRewrite: { '^/api/schedules': '' },
+  logLevel: 'warn'
+});
+
+const venueServiceProxy = createProxyMiddleware({
+  target: 'http://localhost:3006',
+  changeOrigin: true,
+  pathRewrite: { '^/api/venues': '' },
+  logLevel: 'warn'
+});
+
+const announcementServiceProxy = createProxyMiddleware({
+  target: 'http://localhost:3007',
+  changeOrigin: true,
+  pathRewrite: { '^/api/announcements': '' },
+  logLevel: 'warn'
+});
+
+const userServiceProxy = createProxyMiddleware({
+  target: 'http://localhost:3008',
+  changeOrigin: true,
+  pathRewrite: { '^/api/users': '' },
+  logLevel: 'warn'
+});
+
+app.use('/api/courses', courseServiceProxy);
+app.use('/api/notifications', notificationServiceProxy);
+app.use('/api/schedules', scheduleServiceProxy);
+app.use('/api/venues', venueServiceProxy);
+app.use('/api/announcements', announcementServiceProxy);
+app.use('/api/users', userServiceProxy);
+
+// Body parsers - Only for routes handled by the gateway itself
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 // API Documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+// app.use('/api-docs/swagger.json', swaggerUi.setup(swaggerDocument)); // Removed incorrect line
 
 // Health check route
 app.get('/health', (req, res) => {
   res.status(200).json({
     success: true,
-    message: 'Server is running',
-    timestamp: new Date().toISOString(),
-    connectedUsers: socketAPI.getConnectedUsersCount()
+    message: 'API Gateway is running',
+    timestamp: new Date().toISOString()
   });
 });
-
-// API Routes
-app.use('/api/auth', authLimiter, authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/announcements', announcementRoutes);
-app.use('/api/comments', commentRoutes);
-app.use('/api/venues', venueRoutes);
-app.use('/api/schedules', scheduleRoutes);
-app.use('/api/notifications', notificationRoutes);
-app.use('/api/courses', courseRoutes);
 
 // Root route
 app.get('/', (req, res) => {
   res.json({
     success: true,
-    message: 'Smart University Communication and Venue Notification System API',
-    version: '1.0.0',
+    message: 'Smart University Communication and Venue Notification System API Gateway',
+    version: '2.0.0',
     documentation: '/api-docs'
   });
 });
@@ -116,15 +139,14 @@ app.use((req, res) => {
 app.use(errorHandler);
 
 // Start server
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 
 server.listen(PORT, () => {
   console.log('\n=================================');
-  console.log(' Server is running');
+  console.log(' API Gateway is running');
   console.log(` Port: ${PORT}`);
   console.log(` Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(` API Docs: http://localhost:${PORT}/api-docs`);
-  console.log(`Socket.io: Enabled`);
   console.log('=================================\n');
 });
 
@@ -137,11 +159,7 @@ process.on('unhandledRejection', (err) => {
 // Handle SIGTERM
 process.on('SIGTERM', async () => {
   console.log('👋 SIGTERM received, shutting down gracefully');
-  server.close(async () => {
-    await prisma.$disconnect();
-    process.exit(0);
-  });
+  server.close(() => process.exit(0));
 });
 
-module.exports = { app, server, io };
-
+module.exports = { app, server };

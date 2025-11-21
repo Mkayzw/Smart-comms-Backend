@@ -1,10 +1,86 @@
-const prisma = require('../config/db');
-const { AppError } = require('../utils/errorHandler');
-const { validateRequired, validateDayOfWeek, validateTimeFormat } = require('../utils/validator');
-const { createNotification, notifyCourseStudents } = require('../services/notificationService');
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const { PrismaClient } = require('@prisma/client');
+const { AppError } = require('../../utils/errorHandler');
+const { validateRequired, validateDayOfWeek, validateTimeFormat } = require('../../utils/validator');
+const { serviceRequest } = require('../../shared/utils');
+const protect = require('../../middleware/auth');
+const authorize = require('../../middleware/role');
+
+const app = express();
+const PORT = process.env.SCHEDULE_SERVICE_PORT || 3005;
+
+// Initialize Prisma Client
+const prisma = new PrismaClient();
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Simple request logging
+app.use((req, res, next) => {
+  console.log(`[SCHEDULE SERVICE] ${new Date().toISOString()} ${req.method} ${req.path}`);
+  next();
+});
+
+// Health check
+app.get('/health', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Schedule Service is running',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Helper: Notify course students
+const notifyCourseStudents = async (options) => {
+  try {
+    const { courseId, type, message, link, excludeStudentIds = [] } = options;
+
+    const enrollments = await prisma.enrollment.findMany({
+      where: {
+        courseId,
+        studentId: excludeStudentIds.length > 0 ? { notIn: excludeStudentIds } : undefined
+      },
+      select: {
+        studentId: true
+      }
+    });
+
+    if (enrollments.length === 0) {
+      return [];
+    }
+
+    const studentIds = enrollments.map(e => e.studentId);
+
+    // Send notifications via Notification Service
+    // In a production environment, this should be a bulk operation or message queue event
+    for (const studentId of studentIds) {
+      try {
+        await serviceRequest('notification-service', '/', {
+          method: 'POST',
+          data: {
+            userId: studentId,
+            type,
+            message,
+            link
+          }
+        });
+      } catch (error) {
+        console.error(`Failed to notify student ${studentId}:`, error.message);
+      }
+    }
+
+    return studentIds;
+  } catch (error) {
+    console.error('Error notifying course students:', error);
+    return [];
+  }
+};
 
 // @desc    Create schedule
-// @route   POST /api/schedules
+// @route   POST /
 // @access  Private (Lecturers/Admins)
 const createSchedule = async (req, res, next) => {
   try {
@@ -112,24 +188,15 @@ const createSchedule = async (req, res, next) => {
     });
 
     // Notify enrolled students about the new schedule
-    const studentIds = await notifyCourseStudents({
+    await notifyCourseStudents({
       courseId,
       type: 'SCHEDULE_CREATED',
       message: `New schedule added for ${schedule.course.name} on ${dayOfWeek}`,
       link: `/courses/${courseId}`
     });
 
-    if (global.socketAPI) {
-      if (Array.isArray(studentIds)) {
-        studentIds.forEach((studentId) => {
-          global.socketAPI.sendNotification(studentId, {
-            type: 'SCHEDULE_CREATED',
-            schedule
-          });
-        });
-      }
-      global.socketAPI.broadcastScheduleUpdate(schedule);
-    }
+    // TODO: Implement real-time broadcast for schedules via Notification Service
+    // Previously: global.socketAPI.broadcastScheduleUpdate(schedule);
 
     res.status(201).json({
       success: true,
@@ -141,7 +208,7 @@ const createSchedule = async (req, res, next) => {
 };
 
 // @desc    Get all schedules
-// @route   GET /api/schedules
+// @route   GET /
 // @access  Private
 const getSchedules = async (req, res, next) => {
   try {
@@ -215,7 +282,7 @@ const getSchedules = async (req, res, next) => {
 };
 
 // @desc    Get user's schedule
-// @route   GET /api/schedules/my-schedule
+// @route   GET /my-schedule
 // @access  Private
 const getMySchedule = async (req, res, next) => {
   try {
@@ -313,7 +380,7 @@ const getMySchedule = async (req, res, next) => {
 };
 
 // @desc    Update schedule
-// @route   PUT /api/schedules/:id
+// @route   PUT /:id
 // @access  Private (Author/Admin)
 const updateSchedule = async (req, res, next) => {
   try {
@@ -450,31 +517,29 @@ const updateSchedule = async (req, res, next) => {
     });
 
     // Notify about schedule change
-    await createNotification({
-      type: 'SCHEDULE_UPDATE',
-      message: `Schedule updated for ${updatedSchedule.course.name}`,
-      link: `/schedules/${id}`,
-      targetAudience: 'ALL'
-    });
+    try {
+      await serviceRequest('notification-service', '/', {
+        method: 'POST',
+        data: {
+            type: 'SCHEDULE_UPDATE',
+            message: `Schedule updated for ${updatedSchedule.course.name}`,
+            link: `/schedules/${id}`,
+            targetAudience: 'ALL' // Note: Notification service might need to handle this if we want to support 'ALL'
+        }
+      });
+    } catch (err) {
+      console.error('Failed to send schedule update notification', err);
+    }
 
-    const updatedStudentIds = await notifyCourseStudents({
+    await notifyCourseStudents({
       courseId: updatedSchedule.course.id,
       type: 'SCHEDULE_UPDATE',
       message: `Schedule updated for ${updatedSchedule.course.name}`,
       link: `/courses/${updatedSchedule.course.id}`
     });
 
-    if (global.socketAPI) {
-      if (Array.isArray(updatedStudentIds)) {
-        updatedStudentIds.forEach((studentId) => {
-          global.socketAPI.sendNotification(studentId, {
-            type: 'SCHEDULE_UPDATE',
-            schedule: updatedSchedule
-          });
-        });
-      }
-      global.socketAPI.broadcastScheduleUpdate(updatedSchedule);
-    }
+    // TODO: Implement real-time broadcast
+    // global.socketAPI.broadcastScheduleUpdate(updatedSchedule);
 
     res.status(200).json({
       success: true,
@@ -486,7 +551,7 @@ const updateSchedule = async (req, res, next) => {
 };
 
 // @desc    Delete schedule
-// @route   DELETE /api/schedules/:id
+// @route   DELETE /:id
 // @access  Private (Author/Admin)
 const deleteSchedule = async (req, res, next) => {
   try {
@@ -509,30 +574,15 @@ const deleteSchedule = async (req, res, next) => {
       where: { id }
     });
 
-    const deletedStudentIds = await notifyCourseStudents({
+    await notifyCourseStudents({
       courseId: schedule.courseId,
       type: 'SCHEDULE_REMOVED',
       message: 'A schedule you were enrolled in has been removed',
       link: `/courses/${schedule.courseId}`
     });
 
-    if (global.socketAPI) {
-      if (Array.isArray(deletedStudentIds)) {
-        deletedStudentIds.forEach((studentId) => {
-          global.socketAPI.sendNotification(studentId, {
-            type: 'SCHEDULE_REMOVED',
-            scheduleId: id,
-            courseId: schedule.courseId
-          });
-        });
-      }
-      global.socketAPI.broadcastScheduleUpdate({
-        event: 'deleted',
-        scheduleId: id,
-        courseId: schedule.courseId,
-        lecturerId: schedule.lecturerId
-      });
-    }
+    // TODO: Implement real-time broadcast
+    // global.socketAPI.broadcastScheduleUpdate({...});
 
     res.status(200).json({
       success: true,
@@ -543,11 +593,47 @@ const deleteSchedule = async (req, res, next) => {
   }
 };
 
-module.exports = {
-  createSchedule,
-  getSchedules,
-  getMySchedule,
-  updateSchedule,
-  deleteSchedule
-};
+// Routes - All require authentication
+app.use(protect);
+
+app.get('/my-schedule', getMySchedule);
+app.post('/', authorize('LECTURER', 'ADMIN'), createSchedule);
+app.get('/', getSchedules);
+app.put('/:id', updateSchedule);
+app.delete('/:id', deleteSchedule);
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    error: 'Route not found'
+  });
+});
+
+// Error handler
+app.use((err, req, res, next) => {
+  console.error('Schedule Service Error:', err);
+  res.status(err.statusCode || 500).json({
+    success: false,
+    error: err.message || 'Internal server error'
+  });
+});
+
+// Start server
+app.listen(PORT, () => {
+  console.log('\n=================================');
+  console.log(' Schedule Service is running');
+  console.log(` Port: ${PORT}`);
+  console.log(` Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log('=================================\n');
+});
+
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  await prisma.$disconnect();
+  process.exit(0);
+});
+
+module.exports = app;
 
