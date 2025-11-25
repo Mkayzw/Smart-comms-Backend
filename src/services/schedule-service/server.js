@@ -7,6 +7,7 @@ const { validateRequired, validateDayOfWeek, validateTimeFormat } = require('../
 const { serviceRequest } = require('../../shared/utils');
 const protect = require('../../middleware/auth');
 const authorize = require('../../middleware/role');
+const socketEmitter = require('../../shared/socketEmitter');
 
 const app = express();
 const PORT = process.env.SCHEDULE_SERVICE_PORT || 3005;
@@ -55,7 +56,7 @@ const notifyCourseStudents = async (options) => {
     const studentIds = enrollments.map(e => e.studentId);
 
     // Send notifications via Notification Service
-    // In a production environment, this should be a bulk operation or message queue event
+    
     for (const studentId of studentIds) {
       try {
         await serviceRequest('notification-service', '/', {
@@ -195,8 +196,8 @@ const createSchedule = async (req, res, next) => {
       link: `/courses/${courseId}`
     });
 
-    // TODO: Implement real-time broadcast for schedules via Notification Service
-    // Previously: global.socketAPI.broadcastScheduleUpdate(schedule);
+    // Emit schedule creation event
+    socketEmitter.emit('schedule.created', schedule);
 
     res.status(201).json({
       success: true,
@@ -524,7 +525,7 @@ const updateSchedule = async (req, res, next) => {
             type: 'SCHEDULE_UPDATE',
             message: `Schedule updated for ${updatedSchedule.course.name}`,
             link: `/schedules/${id}`,
-            targetAudience: 'ALL' // Note: Notification service might need to handle this if we want to support 'ALL'
+            targetAudience: 'ALL' 
         }
       });
     } catch (err) {
@@ -538,8 +539,8 @@ const updateSchedule = async (req, res, next) => {
       link: `/courses/${updatedSchedule.course.id}`
     });
 
-    // TODO: Implement real-time broadcast
-    // global.socketAPI.broadcastScheduleUpdate(updatedSchedule);
+    // Emit schedule update event
+    socketEmitter.emit('schedule.updated', updatedSchedule);
 
     res.status(200).json({
       success: true,
@@ -580,9 +581,6 @@ const deleteSchedule = async (req, res, next) => {
       message: 'A schedule you were enrolled in has been removed',
       link: `/courses/${schedule.courseId}`
     });
-
-    // TODO: Implement real-time broadcast
-    // global.socketAPI.broadcastScheduleUpdate({...});
 
     res.status(200).json({
       success: true,

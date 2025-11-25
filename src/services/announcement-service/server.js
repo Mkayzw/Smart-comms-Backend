@@ -7,6 +7,7 @@ const { validateRequired, validateTargetAudience } = require('../../utils/valida
 const { serviceRequest } = require('../../shared/utils');
 const protect = require('../../middleware/auth');
 const authorize = require('../../middleware/role');
+const socketEmitter = require('../../shared/socketEmitter');
 
 const app = express();
 const PORT = process.env.ANNOUNCEMENT_SERVICE_PORT || 3007;
@@ -65,6 +66,9 @@ const createAnnouncement = async (req, res, next) => {
         }
       }
     });
+
+    // Emit announcement creation event
+    socketEmitter.emit('announcement.created', announcement);
 
     // Create notifications for targeted users
     try {
@@ -410,17 +414,7 @@ app.put('/:id', updateAnnouncement);
 app.delete('/:id', deleteAnnouncement);
 
 app.post('/:id/comments', addComment);
-// DELETE comment route needs to be handled.
-// The original route was /api/comments/:id in monolithic? No, it was /api/announcements/...
-// Wait, look at old routes file: `router.delete('/:id', deleteAnnouncement);`
-// But `deleteComment` was in controller. Where was it routed?
-// It was likely missing in routes or I missed it.
-// Ah, the old `announcementRoutes.js` only had `router.post('/:id/comments', addComment);`
-// It seems `deleteComment` wasn't exposed in `announcementRoutes.js`.
-// But `commentRoutes.js` might have existed?
-// Let's check if `commentRoutes.js` exists in file list. Yes it does.
-// We should include comment deletion here for completeness or in a separate comment service (overkill).
-// Let's put it under `/comments/:id` here.
+
 app.delete('/comments/:id', deleteComment);
 
 
