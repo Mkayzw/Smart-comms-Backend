@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const prisma = require('../config/db');
+const socketEmitter = require('../shared/socketEmitter');
 
 // Store connected users
 const connectedUsers = new Map();
@@ -92,6 +93,23 @@ const socketHandler = (io) => {
     socket.on('error', (error) => {
       console.error('Socket error:', error);
     });
+  });
+
+  // Listen for events from other services
+  socketEmitter.on('announcement.created', (announcement) => {
+    io.emit('new-announcement', announcement);
+  });
+
+  socketEmitter.on('schedule.created', (schedule) => {
+    io.emit('schedule-update', schedule);
+  });
+
+  socketEmitter.on('schedule.updated', (schedule) => {
+    io.emit('schedule-update', schedule);
+  });
+
+  socketEmitter.on('notification.created', (notification) => {
+    io.to(`user:${notification.userId}`).emit('notification', notification);
   });
 
   return {

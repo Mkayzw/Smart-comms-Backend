@@ -8,6 +8,7 @@ const { PrismaClient } = require('@prisma/client');
 const { AppError } = require('../../utils/errorHandler');
 const { eventBus } = require('../../shared/utils');
 const protect = require('../../middleware/auth');
+const socketEmitter = require('../../shared/socketEmitter');
 
 const app = express();
 const server = http.createServer(app);
@@ -56,6 +57,21 @@ io.use(async (socket, next) => {
     if (!token) {
       return next(new Error('Authentication error: No token provided'));
     }
+    
+    const jwt = require('jsonwebtoken');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Verify user exists in database
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.id }
+    });
+    
+    if (!user) {
+      return next(new Error('Authentication error: User not found'));
+    }
+    
+    socket.userId = user.id;
+    socket.userRole = user.role;
     next();
   } catch (error) {
     console.error('Socket authentication error:', error);
@@ -148,6 +164,9 @@ const createNotification = async (req, res, next) => {
     
     // Send real-time notification via Socket.IO
     io.to(`user:${userId}`).emit('notification', notification);
+    
+    // Emit notification creation event
+    socketEmitter.emit('notification.created', { ...notification, userId });
 
     // Send push notification if token exists
     if (user.pushToken && Expo.isExpoPushToken(user.pushToken)) {
@@ -274,6 +293,14 @@ eventBus.subscribe('course.created', async (data) => {
       link: `/courses/${data.courseId}`,
       timestamp: new Date()
     });
+    
+    // Emit notification creation event
+    socketEmitter.emit('notification.created', {
+      userId: data.lecturerId,
+      type: 'COURSE_CREATED',
+      message: `Your course "${data.courseName}" has been created successfully`,
+      link: `/courses/${data.courseId}`
+    });
   } catch (error) {
     console.error('Error handling course.created event:', error);
   }
@@ -297,6 +324,14 @@ eventBus.subscribe('course.enrolled', async (data) => {
       message: `You have successfully enrolled in "${data.courseName}"`,
       link: `/courses/${data.courseId}`,
       timestamp: new Date()
+    });
+    
+    // Emit notification creation event
+    socketEmitter.emit('notification.created', {
+      userId: data.studentId,
+      type: 'COURSE_ENROLLED',
+      message: `You have successfully enrolled in "${data.courseName}"`,
+      link: `/courses/${data.courseId}`
     });
   } catch (error) {
     console.error('Error handling course.enrolled event:', error);

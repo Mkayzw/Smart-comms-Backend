@@ -7,6 +7,7 @@ const { validateRequired, validateTargetAudience } = require('../../utils/valida
 const { serviceRequest } = require('../../shared/utils');
 const protect = require('../../middleware/auth');
 const authorize = require('../../middleware/role');
+const socketEmitter = require('../../shared/socketEmitter');
 
 const app = express();
 const PORT = process.env.ANNOUNCEMENT_SERVICE_PORT || 3007;
@@ -65,6 +66,9 @@ const createAnnouncement = async (req, res, next) => {
         }
       }
     });
+
+    // Emit announcement creation event
+    socketEmitter.emit('announcement.created', announcement);
 
     // Create notifications for targeted users
     try {

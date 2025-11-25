@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const http = require('http');
+const { Server } = require('socket.io');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const swaggerUi = require('swagger-ui-express');
 const rateLimit = require('express-rate-limit');
@@ -9,10 +10,28 @@ const rateLimit = require('express-rate-limit');
 const { errorHandler } = require('./utils/errorHandler');
 const logger = require('./utils/logger');
 const swaggerDocument = require('./config/swagger.json');
+const socketHandler = require('./socket/socketHandler');
 
 // Initialize express app
 const app = express();
 const server = http.createServer(app);
+
+// Initialize Socket.IO
+const io = new Server(server, {
+  cors: {
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    methods: ["GET", "POST"]
+  }
+});
+
+// Initialize socket handlers
+const socketUtils = socketHandler(io);
+
+// Make socket utilities available to services
+app.use((req, res, next) => {
+  req.socketUtils = socketUtils;
+  next();
+});
 
 // Middleware
 // Allow all origins for class project - no CORS restrictions
@@ -147,6 +166,7 @@ server.listen(PORT, () => {
   console.log(` Port: ${PORT}`);
   console.log(` Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(` API Docs: http://localhost:${PORT}/api-docs`);
+  console.log(` Socket.IO: Enabled`);
   console.log('=================================\n');
 });
 

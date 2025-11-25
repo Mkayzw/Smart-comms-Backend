@@ -7,6 +7,7 @@ const { validateRequired, validateDayOfWeek, validateTimeFormat } = require('../
 const { serviceRequest } = require('../../shared/utils');
 const protect = require('../../middleware/auth');
 const authorize = require('../../middleware/role');
+const socketEmitter = require('../../shared/socketEmitter');
 
 const app = express();
 const PORT = process.env.SCHEDULE_SERVICE_PORT || 3005;
@@ -195,7 +196,8 @@ const createSchedule = async (req, res, next) => {
       link: `/courses/${courseId}`
     });
 
-    
+    // Emit schedule creation event
+    socketEmitter.emit('schedule.created', schedule);
 
     res.status(201).json({
       success: true,
@@ -537,6 +539,8 @@ const updateSchedule = async (req, res, next) => {
       link: `/courses/${updatedSchedule.course.id}`
     });
 
+    // Emit schedule update event
+    socketEmitter.emit('schedule.updated', updatedSchedule);
 
     res.status(200).json({
       success: true,
