@@ -28,10 +28,10 @@ async function main() {
 
   const admin = {
     id: randomUUID(),
-    email: 'admin@smartuniversity.edu',
+    email: 'chikowore.matsvai@uz.ac.zw',
     password: passwordHash,
-    firstName: 'Amina',
-    lastName: 'Rahman',
+    firstName: 'Chikowore',
+    lastName: 'Matsvai',
     role: 'ADMIN',
     staffId: 'ADM-0001',
     department: 'Administration'
@@ -40,50 +40,50 @@ async function main() {
   const lecturers = [
     {
       id: randomUUID(),
-      email: 'alice.nguyen@smartuniversity.edu',
+      email: 'tendai.mudzengerere@uz.ac.zw',
       password: passwordHash,
-      firstName: 'Alice',
-      lastName: 'Nguyen',
+      firstName: 'Tendai',
+      lastName: 'Mudzengerere',
       role: 'LECTURER',
       staffId: 'L-1001',
       department: 'Computer Science'
     },
     {
       id: randomUUID(),
-      email: 'david.kim@smartuniversity.edu',
+      email: 'vimbai.gumbo@uz.ac.zw',
       password: passwordHash,
-      firstName: 'David',
-      lastName: 'Kim',
+      firstName: 'Vimbai',
+      lastName: 'Gumbo',
       role: 'LECTURER',
       staffId: 'L-1002',
       department: 'Electrical Engineering'
     },
     {
       id: randomUUID(),
-      email: 'fatima.hassan@smartuniversity.edu',
+      email: 'tinashe.mutsvangwa@uz.ac.zw',
       password: passwordHash,
-      firstName: 'Fatima',
-      lastName: 'Hassan',
+      firstName: 'Tinashe',
+      lastName: 'Mutsvangwa',
       role: 'LECTURER',
       staffId: 'L-1003',
       department: 'Business Administration'
     },
     {
       id: randomUUID(),
-      email: 'james.osei@smartuniversity.edu',
+      email: 'ruvarashe.matsinde@uz.ac.zw',
       password: passwordHash,
-      firstName: 'James',
-      lastName: 'Osei',
+      firstName: 'Ruvarashe',
+      lastName: 'Matsinde',
       role: 'LECTURER',
       staffId: 'L-1004',
       department: 'Mathematics'
     },
     {
       id: randomUUID(),
-      email: 'laura.park@smartuniversity.edu',
+      email: 'tatenda.chinamasa@uz.ac.zw',
       password: passwordHash,
-      firstName: 'Laura',
-      lastName: 'Park',
+      firstName: 'Tatenda',
+      lastName: 'Chinamasa',
       role: 'LECTURER',
       staffId: 'L-1005',
       department: 'Creative Arts'
@@ -93,150 +93,150 @@ async function main() {
   const students = [
     {
       id: randomUUID(),
-      email: 'john.doe@student.smartuniversity.edu',
+      email: 'R2420129@students.uz.ac.zw',
       password: passwordHash,
-      firstName: 'John',
-      lastName: 'Doe',
+      firstName: 'Tanyaradzwa',
+      lastName: 'Moyo',
       role: 'STUDENT',
       studentId: 'STU2025001',
       department: 'Computer Science'
     },
     {
       id: randomUUID(),
-      email: 'maria.silva@student.smartuniversity.edu',
+      email: 'R2410456@students.uz.ac.zw',
       password: passwordHash,
-      firstName: 'Maria',
-      lastName: 'Silva',
+      firstName: 'Tapiwa',
+      lastName: 'Chimurenga',
       role: 'STUDENT',
       studentId: 'STU2025002',
       department: 'Computer Science'
     },
     {
       id: randomUUID(),
-      email: 'liam.chen@student.smartuniversity.edu',
+      email: 'R2311876@students.uz.ac.zw',
       password: passwordHash,
-      firstName: 'Liam',
-      lastName: 'Chen',
+      firstName: 'Chipo',
+      lastName: 'Matsvai',
       role: 'STUDENT',
       studentId: 'STU2025003',
       department: 'Electrical Engineering'
     },
     {
       id: randomUUID(),
-      email: 'aisha.patel@student.smartuniversity.edu',
+      email: 'R2322098@students.uz.ac.zw',
       password: passwordHash,
-      firstName: 'Aisha',
-      lastName: 'Patel',
+      firstName: 'Farai',
+      lastName: 'Mutasa',
       role: 'STUDENT',
       studentId: 'STU2025004',
       department: 'Business Administration'
     },
     {
       id: randomUUID(),
-      email: 'javier.ruiz@student.smartuniversity.edu',
+      email: 'R2331543@students.uz.ac.zw',
       password: passwordHash,
-      firstName: 'Javier',
-      lastName: 'Ruiz',
+      firstName: 'Kudzai',
+      lastName: 'Makoni',
       role: 'STUDENT',
       studentId: 'STU2025005',
       department: 'Business Administration'
     },
     {
       id: randomUUID(),
-      email: 'chloe.martin@student.smartuniversity.edu',
+      email: 'R2423789@students.uz.ac.zw',
       password: passwordHash,
-      firstName: 'Chloe',
-      lastName: 'Martin',
+      firstName: 'Nyasha',
+      lastName: 'Chikowore',
       role: 'STUDENT',
       studentId: 'STU2025006',
       department: 'Creative Arts'
     },
     {
       id: randomUUID(),
-      email: 'grace.lee@student.smartuniversity.edu',
+      email: 'R2214321@students.uz.ac.zw',
       password: passwordHash,
-      firstName: 'Grace',
-      lastName: 'Lee',
+      firstName: 'Tendai',
+      lastName: 'Zvobgo',
       role: 'STUDENT',
       studentId: 'STU2025007',
       department: 'Mathematics'
     },
     {
       id: randomUUID(),
-      email: 'noah.johnson@student.smartuniversity.edu',
+      email: 'R2428765@students.uz.ac.zw',
       password: passwordHash,
-      firstName: 'Noah',
-      lastName: 'Johnson',
+      firstName: 'Rumbidzai',
+      lastName: 'Mushonga',
       role: 'STUDENT',
       studentId: 'STU2025008',
       department: 'Electrical Engineering'
     },
     {
       id: randomUUID(),
-      email: 'emma.brown@student.smartuniversity.edu',
+      email: 'R2339654@students.uz.ac.zw',
       password: passwordHash,
-      firstName: 'Emma',
-      lastName: 'Brown',
+      firstName: 'Takudzwa',
+      lastName: 'Ngwenya',
       role: 'STUDENT',
       studentId: 'STU2025009',
       department: 'Computer Science'
     },
     {
       id: randomUUID(),
-      email: 'samuel.wright@student.smartuniversity.edu',
+      email: 'R2212345@students.uz.ac.zw',
       password: passwordHash,
-      firstName: 'Samuel',
-      lastName: 'Wright',
+      firstName: 'Simba',
+      lastName: 'Mudzengerere',
       role: 'STUDENT',
       studentId: 'STU2025010',
       department: 'Mathematics'
     },
     {
       id: randomUUID(),
-      email: 'lucia.rossi@student.smartuniversity.edu',
+      email: 'R2434567@students.uz.ac.zw',
       password: passwordHash,
-      firstName: 'Lucia',
-      lastName: 'Rossi',
+      firstName: 'Vimbai',
+      lastName: 'Gumbo',
       role: 'STUDENT',
       studentId: 'STU2025011',
       department: 'Creative Arts'
     },
     {
       id: randomUUID(),
-      email: 'ethan.walker@student.smartuniversity.edu',
+      email: 'R2328901@students.uz.ac.zw',
       password: passwordHash,
-      firstName: 'Ethan',
-      lastName: 'Walker',
+      firstName: 'Tinashe',
+      lastName: 'Mutsvangwa',
       role: 'STUDENT',
       studentId: 'STU2025012',
       department: 'Electrical Engineering'
     },
     {
       id: randomUUID(),
-      email: 'priya.sharma@student.smartuniversity.edu',
+      email: 'R2445678@students.uz.ac.zw',
       password: passwordHash,
-      firstName: 'Priya',
-      lastName: 'Sharma',
+      firstName: 'Ruvarashe',
+      lastName: 'Matsinde',
       role: 'STUDENT',
       studentId: 'STU2025013',
       department: 'Computer Science'
     },
     {
       id: randomUUID(),
-      email: 'kelvin.adeyemi@student.smartuniversity.edu',
+      email: 'R2237890@students.uz.ac.zw',
       password: passwordHash,
-      firstName: 'Kelvin',
-      lastName: 'Adeyemi',
+      firstName: 'Tatenda',
+      lastName: 'Chinamasa',
       role: 'STUDENT',
       studentId: 'STU2025014',
       department: 'Mathematics'
     },
     {
       id: randomUUID(),
-      email: 'olivia.nguyen@student.smartuniversity.edu',
+      email: 'R2341234@students.uz.ac.zw',
       password: passwordHash,
-      firstName: 'Olivia',
-      lastName: 'Nguyen',
+      firstName: 'Natsai',
+      lastName: 'Musarurwa',
       role: 'STUDENT',
       studentId: 'STU2025015',
       department: 'Business Administration'
@@ -248,70 +248,66 @@ async function main() {
   console.info(`✅ Inserted ${users.length} users`);
 
   const venues = [
-    {
-      id: randomUUID(),
-      name: 'Auditorium A',
-      building: 'Main Hall',
-      capacity: 500,
-      facilities: ['Projector', 'Sound System', 'Stage'],
-      status: 'AVAILABLE'
-    },
-    {
-      id: randomUUID(),
-      name: 'Lecture Room 201',
-      building: 'Science Block',
-      capacity: 120,
-      facilities: ['Projector', 'Lecture Capture', 'Smart Board'],
-      status: 'AVAILABLE'
-    },
-    {
-      id: randomUUID(),
-      name: 'Lab 3B',
-      building: 'Engineering Block',
-      capacity: 40,
-      facilities: ['Computers', '3D Printers', 'Robotics Kits'],
-      status: 'OCCUPIED'
-    },
-    {
-      id: randomUUID(),
-      name: 'Business Hub 12',
-      building: 'Business School',
-      capacity: 80,
-      facilities: ['Collaboration Pods', 'Video Conferencing', 'Interactive Display'],
-      status: 'AVAILABLE'
-    },
-    {
-      id: randomUUID(),
-      name: 'Library Seminar Room',
-      building: 'Central Library',
-      capacity: 60,
-      facilities: ['Video Conferencing', 'Whiteboards', 'Acoustic Panels'],
-      status: 'MAINTENANCE'
-    },
-    {
-      id: randomUUID(),
-      name: 'Innovation Lab',
-      building: 'Innovation Center',
-      capacity: 55,
-      facilities: ['IoT Devices', 'VR Kits', 'High-Speed WiFi'],
-      status: 'AVAILABLE'
-    },
-    {
-      id: randomUUID(),
-      name: 'Mathematics Room 5',
-      building: 'Mathematics Block',
-      capacity: 70,
-      facilities: ['Smart Board', 'Document Camera', 'Lecture Capture'],
-      status: 'AVAILABLE'
-    },
-    {
-      id: randomUUID(),
-      name: 'Creative Studio',
-      building: 'Arts Center',
-      capacity: 45,
-      facilities: ['Lighting Rig', 'Green Screen', 'Editing Suite'],
-      status: 'AVAILABLE'
-    }
+    // A - C
+    { id: randomUUID(), name: 'Agriculture Conference Hall', building: 'Agriculture Block', capacity: 200, facilities: ['Projector', 'Sound System'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'Agriculture Seminar Room 1', building: 'Agriculture Block', capacity: 30, facilities: ['Whiteboard', 'Projector'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'Beit Hall', building: 'Main Campus', capacity: 500, facilities: ['Projector', 'Sound System', 'Stage'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'Biological Science Lab (BSD2)', building: 'Science Block', capacity: 40, facilities: ['Lab Equipment', 'Microscopes'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'Business Management Science and Economics Theatre', building: 'Business Block', capacity: 150, facilities: ['Projector', 'Sound System'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'CAPS IT', building: 'IT Block', capacity: 60, facilities: ['Computers', 'Projector'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'Commerce Computer Lab', building: 'Commerce Block', capacity: 45, facilities: ['Computers', 'Internet'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'Commercial Law Lecture Room F1', building: 'Law Block', capacity: 80, facilities: ['Projector', 'Whiteboard'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'Computer Engineering', building: 'Engineering Block', capacity: 50, facilities: ['Computers', 'Specialized Equipment'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'Computer Lab Education', building: 'Education Block', capacity: 40, facilities: ['Computers', 'Educational Software'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'Computer Lab-Social & Behavioural Sciences', building: 'Social Sciences Block', capacity: 35, facilities: ['Computers', 'SPSS Software'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'Computer Science Hardware Lab', building: 'Computer Science Block', capacity: 30, facilities: ['Hardware Equipment', 'Tools'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'Confucious Institute', building: 'Language Center', capacity: 100, facilities: ['Projector', 'Audio System'], status: 'AVAILABLE' },
+    
+    // D - G
+    { id: randomUUID(), name: 'Drawing Office', building: 'Engineering Block', capacity: 25, facilities: ['Drawing Tables', 'Storage'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'Education Art and Design Studio Building', building: 'Education Block', capacity: 45, facilities: ['Art Supplies', 'Design Tools'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'Education Lecture Rooms (3, 4)', building: 'Education Block', capacity: 60, facilities: ['Projector', 'Whiteboard'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'Education Rooms (106, 107)', building: 'Education Block', capacity: 40, facilities: ['Projector', 'Whiteboard'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'Electrical Engineering Lab', building: 'Engineering Block', capacity: 35, facilities: ['Lab Equipment', 'Circuits'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'Electrical Engineering Seminar Room 4', building: 'Engineering Block', capacity: 25, facilities: ['Whiteboard', 'Projector'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'Electrical Seminar Room 3', building: 'Engineering Block', capacity: 25, facilities: ['Whiteboard', 'Projector'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'Geography Lecture Theatre', building: 'Science Block', capacity: 120, facilities: ['Projector', 'Maps', 'Globes'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'Geology (G2)', building: 'Science Block', capacity: 40, facilities: ['Rock Samples', 'Microscopes'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'Geomatics Seminar Room (2, 3)', building: 'Science Block', capacity: 30, facilities: ['Surveying Equipment', 'Computers'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'Great Hall', building: 'Main Campus', capacity: 1000, facilities: ['Sound System', 'Stage', 'Projector'], status: 'AVAILABLE' },
+    
+    // H - L
+    { id: randomUUID(), name: 'History Seminar Room', building: 'Humanities Block', capacity: 25, facilities: ['Projector', 'Whiteboard'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'HLT 200 and 300', building: 'Humanities Block', capacity: 200, facilities: ['Projector', 'Sound System'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'Humanities Lecture Theatre 500 (HLT500)', building: 'Humanities Block', capacity: 500, facilities: ['Projector', 'Sound System'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'Ind. and Mech SR (1, 2, 3)', building: 'Engineering Block', capacity: 30, facilities: ['Projector', 'Whiteboard'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'Law Lecture Room', building: 'Law Block', capacity: 80, facilities: ['Projector', 'Law Library'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'Lecture Theatre 1&2', building: 'Main Campus', capacity: 150, facilities: ['Projector', 'Sound System'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'Library Computer Lab', building: 'Library', capacity: 50, facilities: ['Computers', 'Internet', 'Printers'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'Llewellin Hall (often listed as LHMEZZ)', building: 'Main Campus', capacity: 300, facilities: ['Projector', 'Sound System'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'Llewelyn/Llewellin Lecture Rooms (1, 3, 5, F1, F3, G1, G2)', building: 'Main Campus', capacity: 100, facilities: ['Projector', 'Whiteboard'], status: 'AVAILABLE' },
+    
+    // M - R
+    { id: randomUUID(), name: 'Mathematics Seminar Room 5', building: 'Mathematics Block', capacity: 30, facilities: ['Whiteboard', 'Projector'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'Mining Engineering Seminar Room (1, 2)', building: 'Engineering Block', capacity: 25, facilities: ['Projector', 'Mining Equipment'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'MSE Room', building: 'Science Block', capacity: 40, facilities: ['Lab Equipment', 'Microscopes'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'MTR Room', building: 'Science Block', capacity: 30, facilities: ['Lab Equipment'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'New Commerce Building (LG3, LG4)', building: 'Commerce Block', capacity: 120, facilities: ['Projector', 'Computers'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'NLT400 (New Lecture Theatre 400)', building: 'Main Campus', capacity: 400, facilities: ['Projector', 'Sound System'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'Old Medical Lecture', building: 'Medical Block', capacity: 150, facilities: ['Projector', 'Medical Models'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'Rural & Urban Planning Studio (1, 2)', building: 'Planning Block', capacity: 35, facilities: ['Design Tools', 'Computers'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'RUP Lecture Room 6', building: 'Planning Block', capacity: 40, facilities: ['Projector', 'Whiteboard'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'RUP PA4', building: 'Planning Block', capacity: 25, facilities: ['Computers', 'Planning Software'], status: 'AVAILABLE' },
+    
+    // S - V
+    { id: randomUUID(), name: 'Science Lecture Theatre', building: 'Science Block', capacity: 200, facilities: ['Projector', 'Sound System'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'Science Seminar Rooms', building: 'Science Block', capacity: 30, facilities: ['Projector', 'Whiteboard'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'Space Science & Applied Physics Dept', building: 'Science Block', capacity: 50, facilities: ['Lab Equipment', 'Computers'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'Student Union Building', building: 'Student Center', capacity: 300, facilities: ['Sound System', 'Stage'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'Surveying Seminar Room (1, 3)', building: 'Engineering Block', capacity: 25, facilities: ['Surveying Equipment', 'Computers'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'Timber Lecture Room', building: 'Agriculture Block', capacity: 40, facilities: ['Timber Samples', 'Projector'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'Vet Science', building: 'Veterinary Block', capacity: 60, facilities: ['Lab Equipment', 'Medical Tools'], status: 'AVAILABLE' },
+    { id: randomUUID(), name: 'Network Degree Lab', building: 'IT Block', capacity: 45, facilities: ['Computers', 'Network Equipment'], status: 'AVAILABLE' }
   ];
 
   await prisma.venue.createMany({ data: venues, skipDuplicates: true });
@@ -449,7 +445,7 @@ async function main() {
     {
       id: randomUUID(),
       title: 'Data Structures Lab Rescheduled',
-      content: 'The CSC205 lab session originally planned for Wednesday afternoon will now run on Friday from 09:00 to 11:00 in the Innovation Lab due to maintenance in Lab 3B.',
+      content: 'The CSC205 lab session originally planned for Wednesday afternoon will now run on Friday from 09:00 to 11:00 in the Network Degree Lab due to maintenance in the Computer Engineering lab.',
       authorId: lecturers[0].id,
       targetAudience: 'STUDENTS',
       pinned: false,
@@ -458,7 +454,7 @@ async function main() {
     {
       id: randomUUID(),
       title: 'Mathematics Tutoring Program Launch',
-      content: 'Peer tutoring for Calculus I and Linear Algebra begins next week. Sessions run Monday through Thursday evenings in Mathematics Room 5. Sign up on the student portal to reserve a spot.',
+      content: 'Peer tutoring for Calculus I and Linear Algebra begins next week. Sessions run Monday through Thursday evenings in Mathematics Seminar Room 5. Sign up on the student portal to reserve a spot.',
       authorId: lecturers[3].id,
       targetAudience: 'STUDENTS',
       pinned: false,
@@ -475,8 +471,8 @@ async function main() {
     },
     {
       id: randomUUID(),
-      title: 'Creative Studio Equipment Training',
-      content: 'New camera rigs and lighting kits are now available in the Creative Studio. Mandatory orientation sessions will be held this weekend for students who wish to reserve the equipment for projects.',
+      title: 'Education Art and Design Studio Equipment Training',
+      content: 'New camera rigs and lighting kits are now available in the Education Art and Design Studio Building. Mandatory orientation sessions will be held this weekend for students who wish to reserve the equipment for projects.',
       authorId: lecturers[4].id,
       targetAudience: 'STUDENTS',
       pinned: false,
@@ -485,7 +481,7 @@ async function main() {
     {
       id: randomUUID(),
       title: 'Engineering Safety Drill Reminder',
-      content: 'All engineering students and staff must attend the annual safety drill on Thursday at 15:00 in Auditorium A. Review the evacuation plan posted on the intranet ahead of the session.',
+      content: 'All engineering students and staff must attend the annual safety drill on Thursday at 15:00 in the Great Hall. Review the evacuation plan posted on the intranet ahead of the session.',
       authorId: lecturers[1].id,
       targetAudience: 'ALL',
       pinned: false,
@@ -494,7 +490,7 @@ async function main() {
     {
       id: randomUUID(),
       title: 'Library Extended Hours for Midterms',
-      content: 'The Central Library will remain open until 01:00 from 17 to 28 February to support midterm preparation. Quiet study rooms can be reserved in four-hour blocks through the reservation system.',
+      content: 'The Library Computer Lab will remain open until 01:00 from 17 to 28 February to support midterm preparation. Quiet study rooms can be reserved in four-hour blocks through the reservation system.',
       authorId: admin.id,
       targetAudience: 'STUDENTS',
       pinned: false,
@@ -571,22 +567,22 @@ async function main() {
   console.info(`✅ Inserted ${comments.length} comments`);
 
   const scheduleTemplates = [
-    { courseCode: 'CSC101', dayOfWeek: 'MONDAY', startTime: '08:00', endTime: '10:00', venueName: 'Lecture Room 201', semester: '2025 Semester 1' },
-    { courseCode: 'CSC101', dayOfWeek: 'THURSDAY', startTime: '13:00', endTime: '15:00', venueName: 'Innovation Lab', semester: '2025 Semester 1' },
-    { courseCode: 'CSC205', dayOfWeek: 'TUESDAY', startTime: '11:00', endTime: '13:00', venueName: 'Lab 3B', semester: '2025 Semester 1' },
-    { courseCode: 'CSC205', dayOfWeek: 'FRIDAY', startTime: '09:00', endTime: '11:00', venueName: 'Innovation Lab', semester: '2025 Semester 1' },
-    { courseCode: 'CSC310', dayOfWeek: 'WEDNESDAY', startTime: '15:00', endTime: '18:00', venueName: 'Innovation Lab', semester: '2025 Semester 1' },
-    { courseCode: 'CSC310', dayOfWeek: 'SATURDAY', startTime: '10:00', endTime: '13:00', venueName: 'Innovation Lab', semester: '2025 Semester 1' },
-    { courseCode: 'PHY120', dayOfWeek: 'TUESDAY', startTime: '09:00', endTime: '11:00', venueName: 'Lab 3B', semester: '2025 Semester 1' },
-    { courseCode: 'PHY120', dayOfWeek: 'THURSDAY', startTime: '08:00', endTime: '10:00', venueName: 'Lab 3B', semester: '2025 Semester 1' },
-    { courseCode: 'ENG310', dayOfWeek: 'THURSDAY', startTime: '15:00', endTime: '17:00', venueName: 'Lab 3B', semester: '2025 Semester 1' },
-    { courseCode: 'ENG201', dayOfWeek: 'TUESDAY', startTime: '13:00', endTime: '14:30', venueName: 'Library Seminar Room', semester: '2025 Semester 1' },
-    { courseCode: 'BUS150', dayOfWeek: 'MONDAY', startTime: '14:00', endTime: '16:00', venueName: 'Business Hub 12', semester: '2025 Semester 1' },
-    { courseCode: 'BUS220', dayOfWeek: 'WEDNESDAY', startTime: '08:00', endTime: '10:00', venueName: 'Business Hub 12', semester: '2025 Semester 1' },
-    { courseCode: 'MAT110', dayOfWeek: 'TUESDAY', startTime: '10:00', endTime: '12:00', venueName: 'Mathematics Room 5', semester: '2025 Semester 1' },
-    { courseCode: 'MAT220', dayOfWeek: 'FRIDAY', startTime: '11:00', endTime: '13:00', venueName: 'Mathematics Room 5', semester: '2025 Semester 1' },
-    { courseCode: 'ART105', dayOfWeek: 'FRIDAY', startTime: '09:00', endTime: '12:00', venueName: 'Creative Studio', semester: '2025 Semester 1' },
-    { courseCode: 'ART105', dayOfWeek: 'WEDNESDAY', startTime: '16:00', endTime: '18:00', venueName: 'Creative Studio', semester: '2025 Semester 1' }
+    { courseCode: 'CSC101', dayOfWeek: 'MONDAY', startTime: '08:00', endTime: '10:00', venueName: 'Computer Lab Education', semester: '2025 Semester 1' },
+    { courseCode: 'CSC101', dayOfWeek: 'THURSDAY', startTime: '13:00', endTime: '15:00', venueName: 'Computer Science Hardware Lab', semester: '2025 Semester 1' },
+    { courseCode: 'CSC205', dayOfWeek: 'TUESDAY', startTime: '11:00', endTime: '13:00', venueName: 'Computer Engineering', semester: '2025 Semester 1' },
+    { courseCode: 'CSC205', dayOfWeek: 'FRIDAY', startTime: '09:00', endTime: '11:00', venueName: 'Network Degree Lab', semester: '2025 Semester 1' },
+    { courseCode: 'CSC310', dayOfWeek: 'WEDNESDAY', startTime: '15:00', endTime: '18:00', venueName: 'CAPS IT', semester: '2025 Semester 1' },
+    { courseCode: 'CSC310', dayOfWeek: 'SATURDAY', startTime: '10:00', endTime: '13:00', venueName: 'CAPS IT', semester: '2025 Semester 1' },
+    { courseCode: 'PHY120', dayOfWeek: 'TUESDAY', startTime: '09:00', endTime: '11:00', venueName: 'Electrical Engineering Lab', semester: '2025 Semester 1' },
+    { courseCode: 'PHY120', dayOfWeek: 'THURSDAY', startTime: '08:00', endTime: '10:00', venueName: 'Electrical Engineering Lab', semester: '2025 Semester 1' },
+    { courseCode: 'ENG310', dayOfWeek: 'THURSDAY', startTime: '15:00', endTime: '17:00', venueName: 'Electrical Engineering Seminar Room 4', semester: '2025 Semester 1' },
+    { courseCode: 'ENG201', dayOfWeek: 'TUESDAY', startTime: '13:00', endTime: '14:30', venueName: 'Library Computer Lab', semester: '2025 Semester 1' },
+    { courseCode: 'BUS150', dayOfWeek: 'MONDAY', startTime: '14:00', endTime: '16:00', venueName: 'Business Management Science and Economics Theatre', semester: '2025 Semester 1' },
+    { courseCode: 'BUS220', dayOfWeek: 'WEDNESDAY', startTime: '08:00', endTime: '10:00', venueName: 'New Commerce Building (LG3, LG4)', semester: '2025 Semester 1' },
+    { courseCode: 'MAT110', dayOfWeek: 'TUESDAY', startTime: '10:00', endTime: '12:00', venueName: 'Mathematics Seminar Room 5', semester: '2025 Semester 1' },
+    { courseCode: 'MAT220', dayOfWeek: 'FRIDAY', startTime: '11:00', endTime: '13:00', venueName: 'Mathematics Seminar Room 5', semester: '2025 Semester 1' },
+    { courseCode: 'ART105', dayOfWeek: 'FRIDAY', startTime: '09:00', endTime: '12:00', venueName: 'Education Art and Design Studio Building', semester: '2025 Semester 1' },
+    { courseCode: 'ART105', dayOfWeek: 'WEDNESDAY', startTime: '16:00', endTime: '18:00', venueName: 'Education Art and Design Studio Building', semester: '2025 Semester 1' }
   ];
 
   const schedules = scheduleTemplates.map((template, index) => {

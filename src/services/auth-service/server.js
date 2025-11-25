@@ -295,8 +295,7 @@ const getMe = async (req, res, next) => {
 // @access  Private
 const getProfile = async (req, res, next) => {
   try {
-    // In a real implementation, we would extract user from token
-    // For simplicity in this school project, we'll just return a mock profile
+    
     res.status(200).json({
       success: true,
       data: {

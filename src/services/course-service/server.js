@@ -93,10 +93,7 @@ const getCourses = async (req, res, next) => {
       prisma.course.count({ where })
     ]);
 
-    // Determine enrollment status for students if user info is available in request (set by middleware)
-    // Note: Since this is a public route sometimes, req.user might be undefined if not protected
-    // However, the route definition below adds `protect` middleware to everything except maybe this one?
-    // The original code had it as public, but `protect` middleware populates req.user
+
     let enrollmentMap = new Map();
     if (req.user && req.user.role === 'STUDENT' && courses.length > 0) {
       const enrollments = await prisma.enrollment.findMany({
@@ -608,8 +605,7 @@ const getDepartments = async (req, res, next) => {
 };
 
 // @desc    Get courses relevant to the current user
-// @route   GET /my/all  (Changed from /my to /my/all to avoid conflict with /:id if id can be "my" - though unlikely if id is uuid)
-// Actually, express router matches strictly, so /my is fine if defined before /:id
+// @route   GET /my/all  (Changed from /my to /my/all to avoid conflicts
 // @access  Private
 const getMyCourses = async (req, res, next) => {
   try {
@@ -694,13 +690,7 @@ const getMyCourses = async (req, res, next) => {
 };
 
 // Routes
-// IMPORTANT: Order matters. Specific routes before param routes
-// Use protect middleware for all routes - but check which ones were public
-// In original courseController, getCourses and getCourse were Public.
-// But getMyCourses requires Auth.
-// We can use protect selectively or for all. 
-// For simplicity and safety, let's protect everything but allow getCourses/getCourse to handle unauth if needed?
-// Actually, most school systems require login to see courses. Let's protect everything as per getMyCourses requirement.
+
 app.use(protect);
 
 app.get('/my', getMyCourses); 

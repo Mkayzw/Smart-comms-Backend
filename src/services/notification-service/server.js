@@ -56,12 +56,6 @@ io.use(async (socket, next) => {
     if (!token) {
       return next(new Error('Authentication error: No token provided'));
     }
-
-    // In a real implementation, we would validate token with auth service
-    // For simplicity in this school project, we'll just accept any token
-    socket.userId = 'demo-user-id';
-    socket.userRole = 'STUDENT';
-    
     next();
   } catch (error) {
     console.error('Socket authentication error:', error);
