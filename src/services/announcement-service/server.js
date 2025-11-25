@@ -435,14 +435,16 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log('\n=================================');
-  console.log(' Announcement Service is running');
-  console.log(` Port: ${PORT}`);
-  console.log(` Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log('=================================\n');
-});
+// Only listen if we are running locally (not on Vercel)
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => {
+      console.log('\n=================================');
+      console.log(' Announcement Service is running');
+      console.log(` Port: ${PORT}`);
+      console.log(` Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log('=================================\n');
+    });
+}
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
@@ -451,5 +453,6 @@ process.on('SIGTERM', async () => {
   process.exit(0);
 });
 
+// Export the app for Vercel to use
 module.exports = app;
 

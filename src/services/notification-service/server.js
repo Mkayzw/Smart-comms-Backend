@@ -338,15 +338,17 @@ eventBus.subscribe('course.enrolled', async (data) => {
   }
 });
 
-// Start server
-server.listen(PORT, () => {
-  console.log('\n=================================');
-  console.log(' Notification Service is running');
-  console.log(` Port: ${PORT}`);
-  console.log(` Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(` Socket.IO: Enabled`);
-  console.log('=================================\n');
-});
+// Only listen if we are running locally (not on Vercel)
+if (process.env.NODE_ENV !== 'production') {
+    server.listen(PORT, () => {
+      console.log('\n=================================');
+      console.log(' Notification Service is running');
+      console.log(` Port: ${PORT}`);
+      console.log(` Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(` Socket.IO: Enabled`);
+      console.log('=================================\n');
+    });
+}
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
@@ -355,6 +357,7 @@ process.on('SIGTERM', async () => {
   process.exit(0);
 });
 
-module.exports = { app, server, io };
+// Export app for Vercel to use (Socket.IO disabled on Vercel)
+module.exports = app;
 
 
