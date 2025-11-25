@@ -1,6 +1,6 @@
 {
   "name": "smart-university-backend",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Smart University Communication and Lecture Venue Notification System Backend - Microservices Architecture",
   "main": "src/server.js",
   "scripts": {
