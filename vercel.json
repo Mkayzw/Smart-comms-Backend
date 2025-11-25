@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "buildCommand": "cd BACKEND && npm install && npx prisma generate",
+  "builds": [
+    {
+      "src": "BACKEND/src/services/**/server.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    { "src": "/api/auth/(.*)", "dest": "/BACKEND/src/services/auth-service/server.js" },
+    { "src": "/api/courses/(.*)", "dest": "/BACKEND/src/services/course-service/server.js" },
+    { "src": "/api/schedules/(.*)", "dest": "/BACKEND/src/services/schedule-service/server.js" },
+    { "src": "/api/venues/(.*)", "dest": "/BACKEND/src/services/venue-service/server.js" },
+    { "src": "/api/announcements/(.*)", "dest": "/BACKEND/src/services/announcement-service/server.js" },
+    { "src": "/api/users/(.*)", "dest": "/BACKEND/src/services/user-service/server.js" }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "functions": {
+    "BACKEND/src/services/**/server.js": {
+      "maxDuration": 10
+    }
+  }
+}

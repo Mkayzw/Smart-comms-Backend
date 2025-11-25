@@ -1,0 +1,34 @@
+# Exclude old monolithic server
+BACKEND/src/server.js
+
+# Exclude socket.io files (not supported on Vercel)
+BACKEND/src/socket/
+
+# Exclude development files
+BACKEND/src/shared/socketEmitter.js
+
+# Exclude test files
+test-socket-connection.js
+test-vercel-config.js
+
+# Exclude frontend files (deploy separately if needed)
+web/
+mobile/
+
+# Exclude documentation
+*.md
+
+# Exclude environment files
+.env
+.env.*
+
+# Exclude node_modules in subdirectories
+**/node_modules
+
+# Exclude logs
+*.log
+logs/
+
+# Exclude cache
+.cache/
+.vercel/
